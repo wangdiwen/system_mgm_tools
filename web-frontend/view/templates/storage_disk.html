@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>磁盘信息</title>
+<script>
+function disk_process(grid) {
+    //$$.each($$('.trSelected', grid), function(key, value){
+        var device_name = $$(grid).get(0).children[1].innerText.replace("\n", '');
+        var retcode = false
+        var ret = restful_ajax({url:"/model/system/disk", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            retcode = false
+        }, success:function()
+        {
+            retcode = true;
+        }});
+        if (retcode)
+        {
+            var ret_data = $$.parseJSON(ret)
+            $$("#info_table > tr").remove();
+            //var data = "";
+            for (var j = 0; j < ret_data.length; j++)
+            {
+                if (ret_data[j]["device name"] != device_name)
+                    continue;
+                for (var i in ret_data[j])
+                    $$("#info_table").append('<tr><td width="150">' + i + '</td><td>' + ret_data[j][i] + '</td></tr>');
+            }
+            //$$( "#dialog" ).html(data);
+        }
+    //});
+    $$("#dialog").dialog( "open" );
+}
+
+$$(document).ready(function() {
+    $$("#grid").vmxGrid({
+        url : '/model/system/disk',
+        title : '磁盘信息',
+        colModel : [
+            {
+                display : '磁盘名',
+                name : 'device name',
+                width : 100,
+                sortable : false,
+                align : 'left'
+            },
+            {
+                display : '序列号',
+                name : 'serial number',
+                width : 150,
+                sortable : false,
+                align : 'left'
+            },
+            {
+                display : '容量',
+                name : 'user capacity',
+                width : "auto",
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '详情',
+            bclass : 'view',
+            onpress : disk_process
+        }]
+    });
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div id="grid"></div>
+<div id="dialog" title="详情">
+    <table width="100%" height="46" border="0" cellpadding="0" cellspacing="0" class="general_table">
+        <tbody id="info_table">
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" align="left">&nbsp;
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>

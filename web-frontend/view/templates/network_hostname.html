@@ -1,0 +1,65 @@
+$def with (data)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>HOSTNAME</title>
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+
+<script>
+var json_data = '$:data';
+
+function modify_process(){
+            var hostname = $$("#hostname").val();
+            if (hasChinese(hostname))
+            {
+                alert("主机名不能包含中文！");
+                return;
+            }
+            
+            var data = '{"hostname":"' + hostname + '"}';
+            var ret = restful_ajax({url:"/model/network/hostname", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                if (errorThrown != "")
+                    alert(errorThrown)
+                else
+                    alert("请检查是否有中文符号！");
+            }, success:function()
+            {
+                alert("修改成功！")
+                window.location.reload()
+            }});
+}
+
+$$(document).ready(function() {
+    var data = $$.parseJSON(json_data)
+    if (typeof data["hostname"] != "undefined")
+        $$("#hostname").val(data["hostname"]);
+});
+</script>
+</head>
+
+<body>
+
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+	<thead>
+        <tr>
+          <th  colspan="2" align="left">主机名</th>
+        </tr>
+	</thead>
+	<tbody id="info_table">
+	</tbody>
+        <tr>
+          <td width="50" align="left"><input type="text" id="hostname" /></td>
+          <td align="left"><input type="button" class="big" id="update" value="修改" onclick="modify_process();" /></td>
+        </tr>
+	<tfoot>
+		<tr>
+          <td colspan="2" align="left">&nbsp; </td>
+	    </tr>
+	</tfoot>
+</table>
+</body>
+</html>

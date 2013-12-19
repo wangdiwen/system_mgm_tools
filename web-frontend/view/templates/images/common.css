@@ -1,0 +1,374 @@
+body {
+    font-size:13px;
+    font-family:"Courier New", Courier, monospace
+}
+
+td {
+	border-collapse:collapse;
+}
+.general_table {
+	border: 1px solid #CCCCCC;
+	padding:0px;
+}
+.general_table thead{
+	height:30px;
+	font-size:14px;
+	line-height:30px;
+	background: url(wbg.gif) repeat-x top;
+	font-weight: bold;
+}
+
+.general_table thead th{
+	padding:2px 0px 2px 5px;
+}
+
+.general_table tbody td{
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #CCCCCC;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #CCCCCC;
+	padding-left:5px;
+	height:28px;
+	font-size:13px;
+	line-height:28px;
+	overflow: hidden;
+}
+
+.general_table tbody td:last-child{
+	border-right-width: 0px;
+	border-right-style: solid;
+}
+
+.general_table tbody tr:last-child td{
+	border-bottom-width: 0px;
+	border-bottom-style: solid;
+}
+.general_table tbody tr:hover {
+	background-color: #DFEFFF;	
+}
+
+
+.general_table tfoot{
+	height:26px;
+	font-size:13px;
+	line-height:26px;
+	background: url(wbg.gif) repeat-x 0 -1px;
+}
+.general_table tfoot td{
+	padding:2px 0px 2px 5px;
+	border-top-width: 1px;
+	border-top-style: solid;	
+	border-top-color: #CCCCCC;
+}
+
+
+
+.vmxGrid {
+	border: 1px solid #CCCCCC;
+	padding:0px;
+}
+.vmxGrid .grid_title{
+	height:30px;
+	font-size:14px;
+	line-height:30px;
+	background: url(wbg.gif) repeat-x top;
+	font-weight: bold;
+    padding:2px 0px 2px 5px;
+}
+.vmxGrid table {
+	border-collapse:collapse;
+}
+.vmxGrid thead{
+	height:20px;
+	font-size:12px;
+	line-height:20px;
+	background:#fafafa url(fhbg.gif) repeat-x bottom;
+}
+
+.vmxGrid thead th{
+    margin:0px;
+    font-weight: normal;
+    border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #CCCCCC;
+	padding:2px 0px 2px 5px;
+	height:25px;
+}
+
+
+.vmxGrid tbody td{
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #CCCCCC;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #CCCCCC;
+	height:28px;
+	font-size:13px;
+	line-height:28px;
+	overflow: hidden;
+}
+
+.vmxGrid tbody td:last-child{
+	border-right-width: 0px;
+}
+
+.vmxGrid tbody tr:last-child td{
+	border-bottom-width: 0px;
+}
+.vmxGrid tbody tr:hover {
+	background-color: #DFEFFF;	
+}
+
+.vmxGrid tbody tr div.command, body > div.command{
+	display:block;
+	overflow:hidden;
+	line-height:28px;
+}
+
+.vmxGrid tbody tr:hover div.command{
+	width:50;
+	height:100%;
+	display:block;
+	overflow:show;
+}
+
+.vmxGrid tfoot{
+	height:26px;
+	font-size:13px;
+	line-height:26px;
+	background: url(wbg.gif) repeat-x 0 -1px;
+}
+.vmxGrid tfoot td{
+	padding:2px 0px 2px 5px;
+    *padding:2px 0px 2px 5px;
+	border-top-width: 1px;
+	border-top-style: solid;	
+	border-top-color: #CCCCCC;
+}
+div.command div {
+    float:left;
+}
+div.command a, div.command div {
+	height: 25px;
+	width: 25px;
+	overflow:hidden;
+	text-decoration: none;
+	font-size:12px;
+	padding:10px;
+}
+
+div.command .del {
+	background: url(icon_24_24/bin_blue.png) no-repeat left;
+}
+
+div.command .del_red {
+	background: url(icon_24_24/button-cross_red.png) no-repeat left;
+}
+
+div.command .edit {
+	background: url(icon_24_24/gear_blue.png) no-repeat left;
+}
+
+div.command .view {
+	background: url(icon_24_24/search_blue.png) no-repeat left;
+}
+
+div.command .yes {
+	background: url(icon_24_24/button-check_blue.png) no-repeat left;
+}
+
+div.command .start {
+	background: url(icon_24_24/toggle-right-alt_blue.png) no-repeat left;
+}
+
+div.command .restart {
+	background: url(icon_24_24/button-synchronize_blue.png) no-repeat left;
+}
+
+div.command .stop {
+	background: url(icon_24_24/button-power_yellow.png) no-repeat left;
+}
+
+div.command .status {
+    background: url(icon_24_24/briefcase_blue.png) no-repeat left;
+}
+
+div.command .download {
+    background: url(icon_24_24/hard-drive-download_blue.png) no-repeat left;
+}
+
+div.command .upload {
+    background: url(icon_24_24/hard-drive-upload_blue.png) no-repeat left;
+}
+
+div.command .load {
+    background: url(icon_24_24/button-synchronize_blue.png) no-repeat left;
+}
+
+div.command .prev {
+    background: url(icon_24_24/navigation-up_blue.png) no-repeat left;
+}
+
+div.command .next {
+    background: url(icon_24_24/navigation-down_blue.png) no-repeat left;
+}
+
+/*
+
+*/
+
+div.warning {
+    padding-left:25px;
+    background: url(icon_24_24/exclamation-circle_yellow.png) no-repeat left;
+    background-position-y : 3px;
+}
+
+/*
+button
+*/
+
+input[type="button"],button {
+    height:25px;
+    border: 1px solid #CCCCCC;
+    line-height:25px;
+    font-size:13px;
+    background-color:#ece9d8;
+    *padding:0px;
+    *margin:0px;
+}
+
+input[type="button"].big,button.big {
+    height:30px;
+}
+
+input[type="button"].add, button.add {
+    background: url(icon_24_24/toggle-expand-alt_blue.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].edit, button.edit {
+    background: url(icon_24_24/wrench_blue.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].yes, button.yes {
+    background: url(icon_24_24/button-check_blue.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].no, button.no{
+    background: url(icon_24_24/button-cross_red.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].del, button.del
+{
+    background: url(icon_24_24/button-cross_red.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].load, button.load {
+    background: url(icon_24_24/button-synchronize_blue.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].upload, button.upload {
+    background: url(icon_24_24/hard-drive-upload_blue.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+input[type="button"].download, button.download {
+    background: url(icon_24_24/hard-drive-download_blue.png) no-repeat left;
+    background-position-y : 3px;
+    padding-left: 25px;
+}
+
+
+input[type="button"]:hover, button:hover {
+    background-color:#eeeeee;
+    cursor:pointer;
+}
+
+/*
+select  background-color:#ece9d8;
+*/
+select {
+    border: 1px solid #CCCCCC;
+    line-height:25px;
+    font-size:13px;
+   
+}
+select.list {
+    width:160px;
+}
+
+/*
+input[type="text"]
+*/
+input[type="text"] {
+    border: 1px solid #CCCCCC;
+    line-height:25px;
+    *line-height:25px;
+    *height:25px;
+    font-size:13px;
+    font-weight:600;
+    background-color:#ece9d8;
+}
+input[type="text"].addr {
+    width:140px;
+}
+/*
+input[type="file"]
+*/
+
+input[type="file"]
+{
+    background-color:#eeeeee;
+    border: 1px solid #CCCCCC;
+    width:250px;
+    height:20px;
+    line-height:25px;
+}
+form {
+    height:20px;
+    padding:0px;
+    margin:0px;
+    line-height:20px;
+    text-align:middle;
+}
+
+/*
+
+tab
+*/
+
+.vmxTab {width:100%; padding:0px;}
+.vmxTab *{margin:0px;}
+.vmxTab ul{list-style:none;}
+.vmxTab img{border:none; background:none;}
+.vmxTab .vmxTabHd{margin-bottom:-1px; border:1px solid #CCCCCC; border-bottom:none; background: url(wbg.gif) repeat-x top;}
+.vmxTab .vmxTabNav{height:30px; overflow:hidden; *zoom:1;}
+.vmxTab .vmxTabList{float:left; margin-left:-1px;  padding:0 22px; line-height:30px; border-left:1px solid #CCCCCC; border-right:1px solid #CCCCCC;  font-weight:bold; text-align:center; cursor:pointer;}
+.vmxTab .vmxTabList.current{position:relative; background:#fff;}
+.vmxTab .vmxTabBd{border:1px solid #CCCCCC;}
+.vmxTab .vmxTabBd .roundBox{padding:3px;font-size:13px;}
+.vmxTab .vmxTabContent{display:none;}
+.vmxTab .vmxTabContent.current{display:block;}
+
+/*
+
+*/
+
+input:disabled {
+    background-color:#cccccc;
+}

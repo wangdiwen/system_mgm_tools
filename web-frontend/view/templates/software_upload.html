@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<script src="/view/templates/js/ajaxfileupload.js"></script>
+<title>软件包管理</title>
+
+<style type="text/css">
+<!--
+
+-->
+</style>
+<script>
+function ajaxFileUpload()
+{
+    $$("#loading").ajaxStart(function(){
+        $$("#upload_file").attr("disabled", true)
+        $$("#btn").attr("disabled", true)
+        $$(this).show();
+    }).ajaxComplete(function(){
+        $$("#upload_file").attr("disabled", false)
+        $$("#btn").attr("disabled", false)
+        $$(this).hide();
+    });
+    $$.ajaxFileUpload({
+        url:'/view/software/upload',
+        secureuri:false,
+        fileElementId:'upload_file',
+        dataType: 'json',
+        success: function (data, status)
+        {
+            if(typeof(data.error) != 'undefined'
+                && data.error != '')
+            {
+                alert("上传失败:" + data.error);
+            }else
+            {
+                alert("上传成功");
+                $$("#grid").vmxGridReload();
+            }
+        },
+        error: function (data, status, e)
+        {
+            alert("上传失败");
+        }
+    })
+    //return false;
+}
+function upload()
+{
+        var file = $$("#upload_file").val()
+        if (typeof(file) == "undefined" || file == "")
+        {
+            alert("请选择要上传的文件");
+            return;
+        }
+
+        ajaxFileUpload();
+}
+function uninstall(grid)
+{
+        var software = $$(grid).get(0).children[1].innerText.replace("\n", '');
+        var del_confirm = confirm('确定删除' + software + '吗?')
+        if (!del_confirm)
+            return;
+        var data = '{"name":"' + software + '"}';
+
+        var ret = restful_ajax({url:"/model/software/uninstall", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            $$("#grid").vmxGridReload();
+        }});
+}
+
+function detail_process(grid)
+{
+    var name = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    var inface = $$("#inface").val()
+    var ret = restful_ajax({url:"/model/software/rpminfo/" + name, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        $$("#info_table > tr").remove();
+        var ret_data = $$.parseJSON(ret)
+        var key = ["name", "version", "release", "vendor", "installdate", "builddate", "buildhost", "relocations", "group", "sourcerpm", "size", "license", "signature", "url", "summary", "description"];
+        var value = ["Name", "Version", "Release", "Vendor", "Install Date", "Build Date", "Build Host", "Relocations", "Group", "Source RPM", "Size", "License", "Signature", "URL", "Summary", "Description"];
+        for (var i = 0 ; i < key.length; i++)
+        {
+            if (typeof ret_data[key[i]] != "undefined")
+                $$("#info_table").append('<tr><td width="100">' + value[i] + '</td><td>' + ret_data[key[i]] + '</td></tr>');
+        }
+    }
+    $$('#dialog').dialog('open');
+}
+
+$$(document).ready(function() {
+
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
+    
+    $$("#grid").vmxGrid({
+        url : '/model/software/uninstall',
+        title: "软件包管理", 
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del',
+            onpress : uninstall
+        },{
+            name : '详情',
+            bclass : 'view',
+            onpress : detail_process
+        }],
+        foot:[ 
+        {
+            html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' + 
+                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="上传" onclick="upload();" />' + 
+                //'<input id="checkbox" type="checkbox" value="" />Develop升级模式' +
+                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + 
+            '</form>'
+        }]
+    });
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div id="dialog" title="安装包详情">
+    <table width="100%" height="46" border="0" cellpadding="0" cellspacing="0" class="general_table">
+        <tbody id="info_table">
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" align="left">&nbsp;
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+<div id="grid"></div>
+</body>
+</html>

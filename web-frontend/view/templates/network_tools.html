@@ -1,0 +1,289 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>WEB系统日志</title>
+
+<script>
+var start_command = "";
+var sequence = 0;
+var timeout = null;
+function flush(arg)
+{
+    var retcode = false
+    var ret = restful_ajax({url:"/model/network/" + start_command + "/" + sequence, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        //alert(ret)
+        var ret_data = $$.parseJSON(ret)
+        
+        if (typeof ret_data.sequence != "undefined")
+        {
+            if (ret_data.sequence == -1)
+            {
+                clearTimeout(timeout);
+                timeout = null;
+                $$("#info").html($$("#info").html() + start_command + " stoped!\n")
+                start_command = "";
+                sequence = 0;
+                return;
+            }
+            
+            sequence = ret_data.sequence;
+            var data = $$("#info").html() + ret_data.result;
+            $$("#info").html(data);   
+            
+        }
+    }
+    if (typeof arg == "undefined")
+        timeout = setTimeout(flush, 1000);
+}
+
+function clearbuf()
+{
+    $$("#info").html("");
+}
+
+function start(command_type)
+{
+    if (typeof command_type == "undefined" || command_type == "")
+        command_type = $$("#command_type").val();
+
+    if (start_command != "" && start_command != command_type)
+    {
+        stop(start_command);
+        if (timeout != null)
+        {
+            clearTimeout(timeout);
+            timeout = null;
+        }
+    }
+    var addr = $$("#addr").val();
+    var data = ""
+
+    if (!isStrictIp(addr))
+    {
+        alert("地址格式错误！")
+        return;
+    }
+
+    
+
+    if (command_type == "ping")
+    {
+        data = '{"ip":"' + addr + '"';
+        var packet_count = $$("#packet_count").val();
+        if (packet_count != "" && !isDigit(packet_count))
+        {
+            alert("包个数格式错误！！！");
+            return;
+        }
+        
+        if (packet_count != "")
+            data += ',"count":"' + packet_count + '"';
+
+        
+    }else if(command_type == "traceroute")
+    {
+        data = '{"traceroute-to":"' + addr + '"';
+        var src_addr = $$("#src_addr").val();
+        var port = $$("#port").val();
+        var packet_size = $$("#packet_size").val();
+        var inface = $$("#inface").val();
+        var protocol = $$("#protocol").val();
+        var _timeout = $$("#timeout").val();
+
+        if (src_addr != "" && !isStrictIp(src_addr))
+        {
+            alert("源地址格式错误！")
+            return;
+        }
+
+        if (port != "" && !isDigit(port))
+        {
+            alert("端口格式错误！！！");
+            return;
+        }
+
+        if (packet_size != "" && !isDigit(packet_size))
+        {
+            alert("包大小格式错误！！！");
+            return;
+        }
+
+        if (_timeout != "" && !isDigit(_timeout))
+        {
+            alert("超时数值格式错误！！！");
+            return;
+        }
+
+        if (src_addr != "")
+            data += ',"src-address":"' + src_addr + '"';
+
+        if (port != "")
+            data += ',"port":"' + port + '"';
+
+        if (inface != "none")
+            data += ',"interface":"' + inface + '"';
+
+        if (_timeout != "")
+            data += ',"timeout":"' + _timeout + '"';
+
+        data += ',"protocol":"' + protocol + '"';
+        
+    }
+
+    data += '}';
+
+    var ret = restful_ajax({url:"/model/network/" + command_type, type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        start_command = command_type;
+        sequence = 0;
+        if (timeout == null)
+        {
+            $$("#info").html($$("#info").html() + command_type + " started!\n")
+            timeout = setTimeout(flush, 1000);
+        }
+    }});
+}
+
+function stop(command_type)
+{
+    if (typeof command_type == "undefined" || command_type == "")
+        command_type = $$("#command_type").val();
+
+    var ret = restful_ajax({url:"/model/network/" + command_type, type:"DELETE", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        clearTimeout(timeout);
+        timeout = null;
+        flush(false);
+        start_command = "";
+        sequence = 0;
+        $$("#info").html($$("#info").html() + command_type + " stoped!\n")
+    }});
+}
+var init = false;
+function inface_init()
+{
+    if(init)
+        return;
+    var retcode = false
+    var ret = restful_ajax({url:"/model/network/adaptors/devices", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        $$("#inface > option").remove();
+        $$("#inface").append('<option value="none" selected="selected">None</option>');
+        var ret_data = $$.parseJSON(ret)
+        for (var i = 0; i < ret_data.length; i++)
+        {
+            $$("#inface").append('<option value="' + ret_data[i] +'">' + ret_data[i] + '</option>');
+        }
+    }
+
+}
+
+$$(document).ready(function() {
+    //display_info();
+    //setTimeout(display_info, parseInt($$("#flush").val()));
+    if ($$("#command_type").val() != "traceroute")
+    {
+        $$('[rel="traceroute"]').hide();
+        $$('[rel="ping"]').show();
+    }
+    else
+    {
+        inface_init();
+        $$('[rel="traceroute"]').show();
+        $$('[rel="ping"]').hide();
+    }
+
+    $$("#command_type").change(function()
+    {
+        $$("#info").html("");
+        if ($$("#command_type").val() != "traceroute")
+        {
+            $$('[rel="traceroute"]').hide();
+            $$('[rel="ping"]').show();
+        }
+        else
+        {
+            inface_init();
+            $$('[rel="traceroute"]').show();
+            $$('[rel="ping"]').hide();
+        }
+    });
+});
+</script>
+
+</head>
+
+<body>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+	<thead>
+        <tr>
+          <th align="left">
+            <label>命令:<select id="command_type">
+              <option value="ping" selected="selected">ping</option>
+              <option value="traceroute">traceroute</option>
+            </select></label>
+            <label>地址:<input type="text" id="addr" size="15" /></label>
+            <label rel="traceroute">协议:<select id="protocol">
+                <option value="icmp" selected="selected">icmp</option>
+                <option value="tcp">tcp</option>
+                <option value="udp">udp</option>
+              </select>
+            </label>
+            <label rel="traceroute">端口:<input type="text" id="port" size="5" /></label>
+            <label rel="traceroute">源地址:<input type="text" id="src_addr" size="15" /></label>
+            <label rel="traceroute">接口:<select id="inface"></select></label>
+            <label rel="traceroute">包大小:<input type="text" id="packet_size" size="2" value="40" /></label>
+            <label rel="ping">次数:<input type="text" id="packet_count" size="2" value="5" /></label>
+            <label rel="traceroute">超时:<select id="timeout">
+                <option value="5" selected="selected">5秒</option>
+                <option value="10">10秒</option>
+                <option value="30">30秒</option>
+              </select>
+            </label>
+            <input type="button" id="start" class="big" value="开始" onclick="start();" />
+            <input type="button" id="stop" class="big" value="结束" onclick="stop();" />
+            <input type="button" id="clear" class="big" value="清空" onclick="clearbuf();" />
+          </th>
+        </tr>
+	</thead>
+	<tbody>
+        <tr>
+          <td align="left">
+            <pre id="info"></pre>
+          </td>
+        </tr>
+	</tbody>
+	<tfoot>
+		<tr>
+          <td align="left">&nbsp;</td>
+	    </tr>
+	</tfoot>
+</table>
+
+</body>
+</html>

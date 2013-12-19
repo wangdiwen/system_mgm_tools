@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>WEB系统日志</title>
+
+<script>
+function append_to_table(table, value)
+{
+    $$(table).append("<tr><td align=\"left\">" + value + "</td></tr>");
+}
+function display_info(json)
+{
+    var data = null;
+    if (typeof(json) != "undefined" && json != "")
+        data = $$.parseJSON(json)
+    else
+    {
+        var ret = restful_ajax({url:"/model/system/log", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            retcode = false
+        }, success:function()
+        {
+            retcode = true;
+        }});
+        if (retcode)
+        {
+            data = $$.parseJSON(ret)
+        }
+    }
+    if (data == null)
+    {
+        setTimeout(display_info, parseInt($$("#flush").val()));
+        return;
+    }
+    
+    $$("#info_table > tr").remove();
+    for (var i = 0; i < data.length; i++)
+    {
+        append_to_table("#info_table", data[i]);
+    }
+    setTimeout(display_info, parseInt($$("#flush").val()));
+}
+
+
+
+
+$$(document).ready(function() {
+    display_info();
+    setTimeout(display_info, parseInt($$("#flush").val()));
+    
+});
+</script>
+
+</head>
+
+<body>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+	<thead>
+        <tr>
+          <th align="left">WEB系统日志</th>
+        </tr>
+	</thead>
+	<tbody id="info_table">
+	</tbody>
+	<tfoot>
+		<tr>
+          <td align="left">刷新间隔<select id="flush">
+            <option value="30000" selected="selected">30秒</option>
+            <option value="20000">20秒</option>
+			<option value="10000">10秒</option>
+            <option value="5000">5秒</option>
+			<option value="3000">3秒</option>
+          </select></td>
+	    </tr>
+	</tfoot>
+</table>
+
+</body>
+</html>

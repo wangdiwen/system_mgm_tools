@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>数据备份</title>
+
+<script>
+function sys_bak_process()
+{
+    window.open("/view/other/backup?type=sys&path=etc&datatype=tar");
+}
+
+function web_bak_process()
+{
+    window.open("/view/other/backup?type=web&path=conf&datatype=tar");
+}
+
+function web_clear_log_process()
+{
+    var data = '{"type":"web","data":"log","action":"clear"}';
+            
+    var ret = restful_ajax({url:"/view/other/backup", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("清理成功！")
+    }});
+}
+
+function usr_bak_process()
+{
+    var bak_user_type = $$("#bak_user_type").val();
+    var path = ""
+    if (bak_user_type == 0)
+        path = "etc"
+    else
+        path = "log"
+    window.open("/view/other/backup?type=usr&path=" + path + "&datatype=tar");
+}
+
+function usr_edit_process(grid)
+{
+
+}
+
+function usr_del_process(grid)
+{
+    var file = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    var data = ""
+    data += '{"type":"usr","data":"log","action":"del","file":"' + file + '"';
+    data += '}';
+            
+    var ret = restful_ajax({url:"/view/other/backup", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("删除成功！")
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+
+function usr_clear_log_process()
+{
+    var data = ""
+    data += '{"type":"usr","data":"log","action":"clearall"';
+    data += '}';
+            
+    var ret = restful_ajax({url:"/view/other/backup", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("清理成功！")
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+function usr_view_process(grid)
+{
+    var file = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    window.open("/view/other/backup?type=usr&file=" + file + "&datatype=file");
+}
+
+function display_list()
+{
+    var bak_user_type = $$("#bak_user_type").val();
+    var path = ""
+    if (bak_user_type == 0)
+        path = "etc"
+    else
+        path = "log"
+    
+    $$('#grid').vmxGridReload({
+            url:"/view/other/backup?type=usr&path=" + path + "&datatype=list"
+    });
+    
+    if (bak_user_type == 0)
+    {
+        $$("[rel=log]").hide();
+        $$("[rel=button_edit]").show();
+        $$("[rel=button_del]").hide();
+    }
+    else
+    {
+        $$("[rel=log]").show();
+        $$("[rel=button_edit]").hide();
+        $$("[rel=button_del]").show();
+    }
+}
+$$(document).ready(function() {
+    //display_list();
+        
+    $$("#grid").vmxGrid({
+        url : "/view/other/backup?type=usr&path=etc&datatype=list",
+        title: "用户数据备份", 
+        titleappend: '<select id="bak_user_type"><option value="0" selected="selected">配置文件</option><option value="1">日志</option></select><input type="button" class="download" value="备份" onclick="usr_bak_process();" /><input rel="log" type="button" class="del" value="清空日志" onclick="usr_clear_log_process();" />',
+        buttons : [ 
+        {
+            name : '删除日志文件',
+            bclass : 'del',
+            onpress : usr_del_process
+        }/*,
+        {
+            name : '编辑配置文件',
+            bclass : 'edit',
+            onpress : usr_edit_process
+        }*/,
+        {
+            name : '预览',
+            bclass : 'view',
+            onpress : usr_view_process
+        }
+        ]
+    });
+    
+    //var bak_user_type = $$("#bak_user_type").val();
+    //if (bak_user_type == 0)
+    //{
+        $$("[rel=log]").hide();
+        $$("[rel=button_edit]").show();
+        $$("[rel=button_del]").hide();
+    //}
+    //else
+    //{
+    //    $$("[rel=log]").show();
+    //    $$("[rel=etc]").hide();
+    //    $$("[rel=button_edit]").hide();
+    //    $$("[rel=button_del]").show();
+    //}
+    
+    $$("#bak_user_type").change(function()
+    {
+        display_list();
+    });
+});
+</script>
+
+</head>
+
+<body>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+	<thead>
+        <tr>
+          <th colspan="2" align="left">WEB管理系统备份</th>
+        </tr>
+	</thead>
+	<tbody id="info_table">
+        <tr>
+            <td align="center" width="88">
+                <div class="command">
+                    <a title="清空日志" href="javascript:" onclick="web_clear_log_process();return false;" target="_blank" class="del">&nbsp;</a>
+                    <a title="预览-右键另存为" href="/view/other/backup?type=web&file=/opt/system/log/restful-server/restful.log&datatype=file" target="_blank" class="view">&nbsp;</a>
+                </div>
+            </td>
+            <td title="备份" align="left">WEB管理系统日志</td>
+        </tr>
+        <tr>
+            <td align="center">
+                <div class="command">
+                    <a title="备份" href="javascript:" onclick="sys_bak_process();return false;" target="_blank" class="download">&nbsp;</a>
+                    <!--<a title="恢复" href="javascript:;" target="_blank" class="upload">&nbsp;</a>-->
+                </div>
+            </td>
+            <td title="备份" align="left">备份系统配置文件</td>
+        </tr>
+        <tr>
+            <td align="center" width="62">
+                <div class="command">
+                    <a title="备份" href="javascript:" onclick="web_bak_process();return false;" target="_blank" class="download">&nbsp;</a>
+                    <!--<a title="恢复" href="javascript:;" target="_blank" class="upload">&nbsp;</a>-->
+                </div>
+            </td>
+            <td align="left">备份WEB管理系统配置文件</td>
+        </tr>
+	</tbody>
+	<tfoot>
+		<tr>
+          <td colspan="2" align="left">&nbsp;</td>
+	    </tr>
+	</tfoot>
+</table>
+
+<div id="grid"></div>
+
+</body>
+</html>

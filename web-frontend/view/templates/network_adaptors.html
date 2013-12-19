@@ -1,0 +1,479 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>网络接口设置</title>
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+
+<script>
+$$(function() {
+    $$( "#interface_btn" ).click(function(event){
+        event.preventDefault();
+
+        var inface = $$("#inface").val();
+        var bootproto = $$("#bootproto").val();
+        var data_format;
+        if (bootproto == "dhcp")
+        {
+            data_format = '{"bootproto":"dhcp","device":"' + inface + '"}';
+        }else if (bootproto == "static")
+        {
+            var ipaddr = $$("#ipaddr").val();
+            var netmask = $$("#netmask").val();
+            var gateway = $$("#gateway").val();
+            if (ipaddr == ""
+               || netmask == ""
+               || gateway == "")
+            {   
+                alert("地址不能为空！");
+                return
+            }
+            if (!isStrictIp(ipaddr)
+               || !isMask(netmask)
+               || !isStrictIp(gateway))
+            {
+                alert("地址格式不正确！");
+                return
+            }
+            data_format = '{"bootproto":"static","device":"' + inface + '","ipaddr":"' +  ipaddr + 
+                          '","netmask":"' +  netmask +'","gateway":"' +  gateway +'"}';
+
+        }
+
+        alert('IP地址已提交修改，请使用新地址登录！');
+
+        var ret = restful_ajax({url:"/model/network/adaptors/" + inface, type:"PUT", data:data_format, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            $$("#grid").vmxGridReload();
+            $$("#dialog").dialog( "close" );
+            //window.location.reload()
+        }});
+        
+        
+    });
+    
+    $$( "#work_mode_btn" ).click(function(){
+        var inface = $$("#inface").val();
+        var speed = $$("#speed").val();
+        var duplex = $$("#duplex").val();
+        var auto_negotiation = $$("#checkbox").attr("checked")?"on":"off"
+        //var speed = speed.substr(0, speed.length - 4)
+
+        var data_format = '{"auto-negotiation":"' + auto_negotiation + '","duplex":"' + duplex + '","speed":"' +  speed + '"}';
+
+        var ret = restful_ajax({url:"/model/network/adaptors/" + inface + "/workmode", type:"PUT", data:data_format, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            sleep(5000);
+            alert("设置成功！")
+            //$$("#grid").vmxGridReload();
+            $$("#work_mode_dialog").dialog( "close" );
+            //window.location.reload()
+        }});
+    });
+});
+
+var current_grid = null;
+
+function config_process(grid) {
+    current_grid = grid;
+    //$$.each($$('.trSelected', grid),
+    //    function(key, value){
+            $$("#ipaddr").val($$(grid).get(0).children[2].innerText.replace("\n", ''));
+            $$("#netmask").val($$(grid).get(0).children[3].innerText.replace("\n", ''));
+            $$("#inface").val($$(grid).get(0).children[1].innerText.replace("\n", ''));
+            $$("#gateway").val($$(grid).get(0).children[6].innerText.replace("\n", ''));
+    //    });  
+
+    var retcode = false
+    var inface = $$("#inface").val();
+    var ret = restful_ajax({url:"/model/network/adaptors/" + inface, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        var ret_data = $$.parseJSON(ret)
+        if (typeof ret_data["bootproto"] != "undefined")
+        {
+            $$("#bootproto").val(ret_data["bootproto"]);
+            if (ret_data["bootproto"] == "dhcp")
+            {
+                $$("#ipaddr").attr("disabled", true);
+                $$("#netmask").attr("disabled", true);
+                $$("#gateway").attr("disabled", true);
+            }else{
+                $$("#ipaddr").attr("disabled", false);
+                $$("#netmask").attr("disabled", false);
+                $$("#gateway").attr("disabled", false);
+            }
+        }
+    }
+    
+    $$( "#dialog" ).dialog("open" );
+}
+function del_process(grid)
+{
+    var del_confirm = confirm('确定删除此项吗?')
+    if (!del_confirm)
+        return;
+        
+    var opts = $$(grid).data("user_option");
+    if(opts.size < 2)
+    {
+        alert("网络接口至少要有一个IP地址!");
+        return;
+    }   
+    
+    var addr = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    data_format = '{"ipaddr":"' +  addr + '"}';
+
+    var inface = $$("#inface").val();
+    var ret = restful_ajax({url:"/model/network/adaptors/" + inface, type:"DELETE", data:data_format, async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert("删除失败!");
+    }, success:function()
+    {
+        //alert("删除成功!");
+        $$('#add_addr_dialog').vmxGridReload({
+            url:"/model/network/adaptors/" + $$("#inface").val() + "/ipinfo"
+        });
+        $$("#grid").vmxGridReload();
+    }});
+    
+    $$("#ipaddr").val($$(current_grid).get(0).children[2].innerText.replace("\n", ''));
+    $$("#netmask").val($$(current_grid).get(0).children[6].innerText.replace("\n", ''));
+}
+function add_addr()
+{
+    //$$("#addr").val("");
+    //flush_addr_list();
+    var bootproto = $$("#bootproto").val();
+    if (bootproto == "dhcp")
+        return;
+
+    if (!is_init)
+    {
+        init();
+    }else
+    {
+        $$('#add_addr_dialog').vmxGridReload({
+            url:"/model/network/adaptors/" + $$("#inface").val() + "/ipinfo"
+        });
+    }
+    
+    $$("#addr").val("");
+    $$("#mask").val("");
+    $$("#gw").val("");
+    
+    $$('#add_addr_dialog').dialog('open');
+}
+
+function add_addr_process()
+{
+    var addr = $$("#addr").val();
+    var mask = $$("#mask").val();
+    var gw = $$("#gw").val();
+    
+    if (addr == ""
+        || mask == ""
+        || gw == "")
+    {   
+        alert("地址不能为空！");
+        return
+    }
+    if (!isStrictIp(addr)
+        || !isMask(mask)
+        || !isStrictIp(gw))
+    {
+        alert("地址格式不正确！");
+        return
+    }
+    
+    data_format = '{"ipaddr":"' +  addr + 
+                  '","netmask":"' +  mask + 
+                  '","gateway":"' +  gw + '"}';
+    
+    var inface = $$("#inface").val();
+    var ret = restful_ajax({url:"/model/network/adaptors/" + inface, type:"POST", data:data_format, async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert("添加失败!");
+    }, success:function()
+    {
+        $$("#addr").val("");
+        $$("#mask").val("");
+        $$("#gw").val("");
+        alert("添加成功!");
+        $$('#add_addr_dialog').vmxGridReload({
+            url:"/model/network/adaptors/" + $$("#inface").val() + "/ipinfo"
+        });
+    }});
+    
+    //flush_addr_list();
+}
+
+function detail_process(grid)
+{
+    $$("#inface").val($$(grid).get(0).children[1].innerText.replace("\n", ''));
+    var inface = $$("#inface").val()
+    var ret = restful_ajax({url:"/model/network/adaptors/" + inface + "/workmode", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        var ret_data = $$.parseJSON(ret)
+        if (ret_data["auto-negotiation"] != "on")
+        {
+            $$("#speed").attr("disabled", false);
+            $$("#duplex").attr("disabled", false);
+            $$("#checkbox").attr("checked", false);
+        }else
+        {
+            $$("#speed").attr("disabled", true);
+            $$("#duplex").attr("disabled", true);
+            $$("#checkbox").attr("checked", true);
+        }
+        //alert(ret_data["speed"])
+        $$("#speed").val(ret_data["speed"]);
+        $$("#duplex").val(ret_data["duplex"].toLowerCase());
+    }
+    $$('#work_mode_dialog').dialog('open');
+}
+
+function flush_process()
+{
+    $$("#grid").vmxGridReload();
+}
+
+var is_init = false;
+
+function init()
+{
+    $$("#add_addr_dialog").vmxGrid({
+        url : '/model/network/adaptors/' + $$("#inface").val() + '/ipinfo',
+        //showhead: false,
+        showtitle: false,
+        colModel : [
+            {
+                display : 'IP',
+                name : 'ipaddr',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '掩码',
+                name : 'netmask',
+                width : 100,
+                sortable : false,
+                align : 'left'
+            },
+            {
+                display : '默认网关',
+                name : 'gateway',
+                width : "auto",
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [{
+            name : '删除',
+            bclass : 'del',
+            onpress : del_process
+        }],
+        foot:[
+        {
+            html:'IP:<input id="addr" class="addr" type="text" />掩码:<input id="mask" class="addr" type="text" />网关:<input id="gw" class="addr" type="text" />' +
+                 '<input type="button" class="big" value="添加" onclick="add_addr_process();" />'
+        }
+        ]
+    });
+    is_init = true;
+}
+$$(document).ready(function() {
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:330});
+    $$("#work_mode_dialog" ).dialog({autoOpen: false, modal: true, width:330});
+    $$("#add_addr_dialog" ).dialog({autoOpen: false, modal: true, width:600});
+    
+    $$("#bootproto").change(function(param)
+    {
+        if ($$("#bootproto").val() == "dhcp")
+        {
+            $$("#ipaddr").attr("disabled", true);
+            $$("#netmask").attr("disabled", true);
+            $$("#gateway").attr("disabled", true);
+        }else{
+            $$("#ipaddr").attr("disabled", false);
+            $$("#netmask").attr("disabled", false);
+            $$("#gateway").attr("disabled", false);
+        }
+    });
+    
+    $$("#grid").vmxGrid({
+        url : '/model/network/adaptors',
+        title: "网络接口设置", 
+        colModel : [
+            {
+                display : '接口',
+                name : 'device',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'IP',
+                name : 'inet',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '掩码',
+                name : 'netmask',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'MAC地址',
+                name : 'hwaddr',
+                width : 140,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '广播地址',
+                name : 'broadcast',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '网关',
+                name : 'gateway',
+                width : "auto",
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [{
+            name : '修改',
+            bclass : 'edit',
+            onpress : config_process
+        },{
+            name : '模式',
+            bclass : 'view',
+            onpress : detail_process
+        }],
+        foot:[ 
+        {
+            name : '刷新',
+            bclass : 'load',
+            onpress : flush_process
+        }]
+    });
+    $$("#checkbox").click(function()
+    {
+        var checked = $$("#checkbox").attr("checked");
+        if (checked)
+        {
+            $$("#speed").attr("disabled", true);
+            $$("#duplex").attr("disabled", true);
+        }else
+        {
+            $$("#speed").attr("disabled", false);
+            $$("#duplex").attr("disabled", false);
+        }
+    });
+});
+
+</script>
+</head>
+
+<body>
+<div id="work_mode_dialog" title="网口模式设置">
+    <table width="300" height="150" border="0" cellpadding="0" cellspacing="0" id="info_table">
+        <tr>
+          <td width="80" align="left">模式：</td>
+          <td width="220" align="left">
+            <select id="duplex" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="full" selected="selected">全双工</option>
+              <option value="half">半双工</option>
+            </select> 
+          </td>
+        </tr>
+        <tr id="ipaddr_ui">
+          <td align="left">速率：</td>
+          <td align="left">
+            <select id="speed" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="10Mb/s" selected="selected">10M</option>
+              <option value="100Mb/s">100M</option>
+              <option value="1000Mb/s">1000M</option>
+            </select> </td>
+        </tr>
+        <tr id="netmask_ui">
+          <td align="left"></td>
+          <td align="left">
+            <input id="checkbox" type="checkbox" value="" />自动协商
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" align="center"><input type="button" class="edit" id="work_mode_btn" value="修改" /></td>
+        </tr>
+    </table>
+</div>
+<div id="dialog" title="网络接口设置">
+    <table width="300" height="180" border="0" cellpadding="0" cellspacing="0" id="info_table">
+        <tr>
+          <td width="80" align="left">模式：</td>
+          <td width="220" align="left">
+            <select id="bootproto" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="static" selected="selected">静态IP</option>
+              <option value="dhcp">DHCP</option>
+            </select> 
+          </td>
+        </tr>
+        <tr id="ipaddr_ui">
+          <td align="left">IP地址：</td>
+          <td align="left">
+            <input type="text" id="ipaddr" size="20" class="ui-widget ui-corner-all" />
+            <a href="javascript:add_addr();"><img src="/view/templates/images/edit.gif" width="20" height="20" align="absmiddle" border="0" /></a></td>
+        </tr>
+        <tr id="netmask_ui">
+          <td align="left">掩码：</td>
+          <td align="left">
+            <input type="text" id="netmask" size="20" class="ui-widget ui-corner-all" />
+          </td>
+        </tr>
+        <tr id="gateway_ui">
+          <td align="left">网关：</td>
+          <td align="left">
+            <input type="text" id="gateway" size="20" class="ui-widget ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" align="center"><input type="button" class="edit" id="interface_btn" value="修改" />
+          <input type="hidden" id="inface" /></td>
+        </tr>
+    </table>
+</div>
+<div id="add_addr_dialog" title="添加IP地址"></div>
+<div id="grid"></div>
+</body>
+</html>

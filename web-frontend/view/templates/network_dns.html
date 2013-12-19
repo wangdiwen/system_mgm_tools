@@ -1,0 +1,140 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>DNS</title>
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+
+<script>
+
+function del_process(grid)
+{
+    var nameserver = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    
+    var del_confirm = confirm('确定删除' + nameserver + '吗?')
+    if (!del_confirm)
+        return;
+        
+            if (nameserver == null || nameserver == "")
+            {
+                alert("dns地址不能为空");
+                return;
+            }
+            var data = '{"nameserver":"' + nameserver + '"}';
+            var ret = restful_ajax({url:"/model/network/nameserver", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                window.location.reload()
+            }});
+}
+
+function add_process()
+{
+    var nameserver = $$("#nameserver").val();
+            if (!isStrictIp(nameserver))
+            {
+                alert("格式错误!");
+                return;
+            }
+            var data = '{"nameserver":"' + nameserver + '"}';
+            var ret = restful_ajax({url:"/model/network/nameserver", type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                alert("添加成功！")
+                $$("#nameserver").val("")
+                $$("#grid").vmxGridReload();
+            }});
+}
+
+function prev_process(grid)
+{
+    var position = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    if (position == "0")
+        return;
+        
+    var nameserver = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var data = '{"nameserver":"' + nameserver + '","direct":"up"}';
+    var ret = restful_ajax({url:"/model/network/nameserver", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+function next_process(grid)
+{
+    var position = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    var size = $$("#grid").data("user_option").size;
+    if (parseInt(position) == size - 1)
+        return;
+        
+    var nameserver = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var data = '{"nameserver":"' + nameserver + '","direct":"down"}';
+    var ret = restful_ajax({url:"/model/network/nameserver", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+$$(document).ready(function() {
+
+    $$("#grid").vmxGrid({
+        url : '/model/network/nameserver',
+        title: "DNS管理", 
+        colModel : [
+            {
+                display : '位置',
+                name : 'position',
+                width : 50,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '地址',
+                name : 'addr',
+                width : "auto",
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del_red',
+            onpress : del_process
+        },{
+            name : '上移',
+            bclass : 'prev',
+            onpress : prev_process
+        },{
+            name : '下移',
+            bclass : 'next',
+            onpress : next_process
+        }],
+        foot:[ 
+        {
+            html: '<input type="text" id="nameserver" /><input type="button" class="big" value="添加" onclick="add_process();" />'
+        }]
+    });
+});
+</script>
+</head>
+
+<body>
+<div id="grid"></div>
+</body>
+</html>

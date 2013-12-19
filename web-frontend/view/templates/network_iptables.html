@@ -1,0 +1,690 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>防火墙管理</title>
+<script>
+
+function delete_process(grid) {
+    var del_confirm = confirm('确定删除此项吗?')
+    if (!del_confirm)
+        return;
+        
+    var table = $$("#vmxTab").vmxTabGetSelectedIndex() == 0 ?"filter":"nat" 
+    
+    //$$.each($$('.trSelected', grid), function(key, value){
+        var chain = $$(grid).get(0).children[1].innerText.replace("\n", '');
+        var position = $$(grid).get(0).children[2].innerText.replace("\n", '');
+            
+        var data = '{"table":"' + table + '","position":' + position + ',"chain":"' + chain + '"}';
+
+        var ret = restful_ajax({url:"/model/network/iptables", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            //alert("删除成功！")
+            if (table == "filter")
+                $$("#grid_filter").vmxGridReload();
+            else
+                $$("#grid_nat").vmxGridReload();
+        }});
+    //});
+}
+
+function add_process(grid) {
+    var retcode = false
+    var ret = restful_ajax({url:"/model/network/adaptors/devices", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        $$("#in_interface > option").remove();
+        $$("#out_interface > option").remove();
+        $$("#in_interface").append('<option value="none" selected="selected">None</option>');
+        $$("#out_interface").append('<option value="none" selected="selected">None</option>');
+        var ret_data = $$.parseJSON(ret)
+        for (var i = 0; i < ret_data.length; i++)
+        {
+            $$("#in_interface").append('<option value="' + ret_data[i] +'">' + ret_data[i] + '</option>');
+            $$("#out_interface").append('<option value="' + ret_data[i] +'">' + ret_data[i] + '</option>');
+        }
+    }
+    var type = $$("#vmxTab").vmxTabGetSelectedIndex();
+    $$("#chain > option").remove();
+    $$("#protocol > option").remove();
+    $$("#action > option").remove();
+    
+    if (type == 0)
+    {
+        $$("#chain").append('<option value="FORWARD" selected="selected">FORWARD</option>');
+        $$("#chain").append('<option value="INPUT">INPUT</option>');
+        $$("#chain").append('<option value="OUTPUT">OUTPUT</option>');
+        
+        $$("#protocol").append('<option value="tcp">tcp</option>');
+        $$("#protocol").append('<option value="udp">udp</option>');
+        $$("#protocol").append('<option value="icmp">icmp</option>');
+        $$("#protocol").append('<option value="esp">esp</option>');
+        $$("#protocol").append('<option value="ah">ah</option>');
+        $$("#protocol").append('<option value="all" selected="selected">all</option>');
+        
+        $$("#action").append('<option value="ACCEPT" selected="selected">ACCEPT</option>');
+        $$("#action").append('<option value="DROP">DROP</option>');
+        $$("#action").append('<option value="REJECT">REJECT</option>');
+        
+        //$$("#to_port").attr("disabled", true);
+        $$("#to_port_ui").hide();
+    }
+    else
+    {
+        $$("#chain").append('<option value="OUTPUT" selected="selected">OUTPUT</option>');
+        $$("#chain").append('<option value="PREROUTING">PREROUTING</option>');
+        $$("#chain").append('<option value="POSTROUTING">POSTROUTING</option>');
+        
+        $$("#protocol").append('<option value="tcp" selected="selected">tcp</option>');
+        $$("#protocol").append('<option value="udp">udp</option>');
+        
+        $$("#action").append('<option value="DNAT" selected="selected">DNAT</option>');
+        $$("#action").append('<option value="SNAT">SNAT</option>');
+        
+        //$$("#to_port").attr("disabled", false);
+        $$("#to_port_ui").show();
+    }
+    $$("#source").val("");
+    $$("#destination").val("");
+    $$("#dport").val("");
+    $$("#to_port").val("");
+    
+        
+    var protocol = $$("#protocol").val();
+    if (protocol == "tcp" || protocol == "udp" )
+        $$("#dport_ui").show();
+    else
+        $$("#dport_ui").hide();
+    if (type == 0)
+        $$("#info_table").attr("height", 300);
+    else
+        $$("#info_table").attr("height", 350);
+    $$( "#dialog" ).dialog( "open" );
+}
+
+function prev_process(grid)
+{
+    var position = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    if (position == "1")
+        return;
+    var table = $$("#vmxTab").vmxTabGetSelectedIndex() == 0 ?"filter":"nat" 
+    var chain = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    var to_port = $$(grid).get(0).children[9].innerText.replace("\n", '');
+    var action = $$(grid).get(0).children[14].innerText.replace("\n", '');
+    var protocol = $$(grid).get(0).children[3].innerText.replace("\n", '');
+    var source = $$(grid).get(0).children[6].innerText.replace("\n", '');
+    var destination = $$(grid).get(0).children[7].innerText.replace("\n", '');
+    var dport = $$(grid).get(0).children[8].innerText.replace("\n", '');
+    var in_interface = $$(grid).get(0).children[12].innerText.replace("\n", '');
+    var out_interface = $$(grid).get(0).children[13].innerText.replace("\n", '');
+
+            var data = ""
+            data += '{"table":"' + table + '","chain":"' + chain + '","action":"' + action + '"';
+            
+            if (protocol != "all")
+                data += ',"protocol":"' + protocol + '"';
+                
+            if (source != "0.0.0.0/0")
+                data += ',"source":"' + source + '"';
+            if (destination != "0.0.0.0/0")
+                data += ',"destination":"' + destination + '"';
+            if (dport != "*" && ( protocol == "udp"|| protocol == "tcp"))
+                data += ',"dport":"' + dport + '"';
+            if (in_interface != "*")
+                data += ',"in-interface":"' + in_interface + '"';
+            if (out_interface != "*")
+                data += ',"out-interface":"' + out_interface + '"';
+            
+            data += ',"position":' + position + ',"to-position":' + (parseInt(position) - 1);
+                
+            
+            
+            if (table == "nat" && to_port != "*")
+                data += ',"to-port":"' + to_port + '"';
+                
+            data += '}';
+
+    var ret = restful_ajax({url:"/model/network/iptables", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        $$("#grid_" + table).vmxGridReload();
+    }});
+}
+
+function next_process(grid)
+{
+    var position = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var table = $$("#vmxTab").vmxTabGetSelectedIndex() == 0 ?"filter":"nat" 
+    var chain = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    
+    var size = $$("#grid_" + table).data("user_option").size;
+    var count = 0;
+    for (var i = 0; i < size; i++ )
+    {
+        if (chain == $$("#grid_" + table).vmxGridGet(i).children[1].innerText.replace("\n", ''))
+            count++;
+    }
+    if (position == count)
+        return;
+    
+    
+    var to_port = $$(grid).get(0).children[9].innerText.replace("\n", '');
+    var action = $$(grid).get(0).children[14].innerText.replace("\n", '');
+    var protocol = $$(grid).get(0).children[3].innerText.replace("\n", '');
+    var source = $$(grid).get(0).children[6].innerText.replace("\n", '');
+    var destination = $$(grid).get(0).children[7].innerText.replace("\n", '');
+    var dport = $$(grid).get(0).children[8].innerText.replace("\n", '');
+    var in_interface = $$(grid).get(0).children[12].innerText.replace("\n", '');
+    var out_interface = $$(grid).get(0).children[13].innerText.replace("\n", '');
+
+            var data = ""
+            data += '{"table":"' + table + '","chain":"' + chain + '","action":"' + action + '"';
+            
+            if (protocol != "all")
+                data += ',"protocol":"' + protocol + '"';
+                
+            if (source != "0.0.0.0/0")
+                data += ',"source":"' + source + '"';
+            if (destination != "0.0.0.0/0")
+                data += ',"destination":"' + destination + '"';
+            if (dport != "*" && ( protocol == "udp"|| protocol == "tcp"))
+                data += ',"dport":"' + dport + '"';
+            if (in_interface != "*")
+                data += ',"in-interface":"' + in_interface + '"';
+            if (out_interface != "*")
+                data += ',"out-interface":"' + out_interface + '"';
+            
+            data += ',"position":' + position + ',"to-position":' + (parseInt(position) + 1);
+                
+            
+            
+            if (table == "nat" && to_port != "*")
+                data += ',"to-port":"' + to_port + '"';
+                
+            data += '}';
+
+    var ret = restful_ajax({url:"/model/network/iptables", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        $$("#grid_" + table).vmxGridReload();
+    }});
+}
+
+$$(document).ready(function() {
+    $$("#grid_filter").vmxGrid({
+        url : '/view/network/iptablesmodel?type=filter',
+        title : 'Filter',
+        colModel : [
+            {
+                display : '链',
+                name : 'chain',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '位置',
+                name : 'number',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '协议',
+                name : 'prot',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Match',
+                name : 'match',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '选项',
+                name : 'opt',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '源地址',
+                name : 'source',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '目标地址',
+                name : 'destination',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '目标端口',
+                name : 'dport',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '转发地址',
+                name : 'to-port',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Method',
+                name : 'method',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'State',
+                name : 'state',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '入口',
+                name : 'in-interface',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '出口',
+                name : 'out-interface',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '目标',
+                name : 'target',
+                width : 'auto',
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del_red',
+            onpress : delete_process
+        },{
+            name : '上移',
+            bclass : 'prev',
+            onpress : prev_process
+        },{
+            name : '下移',
+            bclass : 'next',
+            onpress : next_process
+        }],
+        foot:[ 
+        {
+            name : '添加',
+            bclass : 'add',
+            onpress : add_process
+        }]
+    });
+    $$("#grid_nat").vmxGrid({
+        url : '/view/network/iptablesmodel?type=nat',
+        title : 'Nat',
+        colModel : [
+            {
+                display : '链',
+                name : 'chain',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '位置',
+                name : 'number',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '协议',
+                name : 'prot',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Match',
+                name : 'match',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '选项',
+                name : 'opt',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '源地址',
+                name : 'source',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '目标地址',
+                name : 'destination',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '目标端口',
+                name : 'dport',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '转发地址',
+                name : 'to-port',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Method',
+                name : 'method',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'State',
+                name : 'state',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '入口',
+                name : 'in-interface',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '出口',
+                name : 'out-interface',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '目标',
+                name : 'target',
+                width : 'auto',
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del_red',
+            onpress : delete_process
+        },{
+            name : '上移',
+            bclass : 'prev',
+            onpress : prev_process
+        },{
+            name : '下移',
+            bclass : 'next',
+            onpress : next_process
+        }],
+        foot:[ 
+        {
+            name : '添加',
+            bclass : 'add',
+            onpress : add_process
+        }]
+    });
+    $$("#dialog").dialog({autoOpen: false, modal: true, width:350});
+    $$("#vmxTab").vmxTab();
+    $$( "input[id=add]" ).click(function(){
+            var table = $$("#vmxTab").vmxTabGetSelectedIndex() == 0 ?"filter":"nat" 
+            var chain = $$("#chain").val();
+            var source = $$("#source").val();
+            var destination = $$("#destination").val();
+            var dport = $$("#dport").val();
+            var in_interface = $$("#in_interface").val();
+            var out_interface = $$("#out_interface").val();
+            var protocol = $$("#protocol").val();
+            var action = $$("#action").val();
+            var to_port = $$("#to_port").val();
+            var position = $$("#position").val();
+
+            if (source != "" 
+                &&!(isStrictIp(source)||isNetWorkRange(source)))
+            {
+                alert("源地址格式错误！")
+                return;
+            }
+
+            if (destination != "" 
+                &&!(isStrictIp(destination)||isNetWorkRange(destination)))
+            {
+                alert("目标地址格式错误！")
+                return;
+            }
+
+            if (position != "" 
+                &&!isDigit(position))
+            {
+                alert("位置格式错误！")
+                return;
+            }
+            
+            if (dport != "" 
+                &&(!isDigit(dport)
+                || (parseInt(dport) > 65535 || parseInt(dport) < 0)))
+            {
+                alert("目标端口格式错误！")
+                return;
+            }
+            
+            var data = ""
+            data += '{"table":"' + table + '","chain":"' + chain + '","action":"' + action + '"';
+            
+            if (protocol != "all")
+                data += ',"protocol":"' + protocol + '"';
+                
+            if (source != "")
+                data += ',"source":"' + source + '"';
+            if (destination != "")
+                data += ',"destination":"' + destination + '"';
+            if (dport != "" && ( protocol == "udp"|| protocol == "tcp"))
+                data += ',"dport":"' + dport + '"';
+            if (in_interface != "none")
+                data += ',"in-interface":"' + in_interface + '"';
+            if (out_interface != "none")
+                data += ',"out-interface":"' + out_interface + '"';
+            if (position != "")
+                data += ',"position":' + position + '';
+                
+            
+            
+            if (table == "nat")
+            {
+                if (to_port == "")
+                {
+                    alert("转发地址不能为空！");
+                    return;
+                }
+                if (!isStrictIpWithPort(to_port) && !isPort(to_port))
+                {
+                    alert("转发地址格式错误！");
+                    return;
+                }
+                
+                if (isPort(to_port) && to_port.indexOf(":") != 0)
+                    to_port = ":" + to_port;
+                data += ',"to-port":"' + to_port + '"';
+            }
+                
+            data += '}';
+
+            var ret = restful_ajax({url:"/model/network/iptables", type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                alert("添加成功！")
+                if (table == "filter")
+                    $$("#grid_filter").vmxGridReload();
+                else
+                    $$("#grid_nat").vmxGridReload();
+                $$("#dialog").dialog( "close" );
+            }});
+            
+    });
+
+    $$("#protocol").change(function(){
+        var protocol = $$("#protocol").val();
+        if (protocol == "tcp" || protocol == "udp" )
+            $$("#dport_ui").show();
+        else
+            $$("#dport_ui").hide();
+    });
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div id="dialog" title="添加">
+    <table width="300" height="300" border="0" cellpadding="0" cellspacing="0" id="info_table">
+        <tr>
+          <td width="100" align="left">链</td>
+          <td width="200" align="left">
+            <select id="chain" class="ui-widget ui-widget-content ui-corner-all">
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td align="left">源地址</td>
+          <td align="left">
+            <input type="text" id="source" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td align="left">目标地址</td>
+          <td align="left">
+            <input type="text" id="destination" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr id="dport_ui">
+          <td align="left">目标端口</td>
+          <td align="left">
+            <input type="text" id="dport" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td width="100" align="left">输入接口</td>
+          <td width="200" align="left">
+            <select id="in_interface" class="ui-widget ui-widget-content ui-corner-all">
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td width="100" align="left">输出接口</td>
+          <td width="200" align="left">
+            <select id="out_interface" class="ui-widget ui-widget-content ui-corner-all">
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td width="100" align="left">协议</td>
+          <td width="200" align="left">
+            <select id="protocol" class="ui-widget ui-widget-content ui-corner-all">
+            </select>
+          </td>
+        </tr>
+        <tr id="to_port_ui">
+          <td align="left">转发地址</td>
+          <td align="left">
+            <input type="text" id="to_port" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td width="100" align="left">动作</td>
+          <td width="200" align="left">
+            <select id="action" class="ui-widget ui-widget-content ui-corner-all">
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td width="100" align="left">位置(可选)</td>
+          <td width="200" align="left">
+            <input type="text" id="position" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" align="center"><input type="button" id="add" class="add" value="添加" />
+          </td>
+        </tr>
+    </table>
+</div>
+
+<div id="vmxTab" class="vmxTab">
+    <div class="vmxTabHd">
+        <ul class="vmxTabNav">
+            <li class="vmxTabList current">Filter</li>
+            <li class="vmxTabList">NAT</li>
+        </ul>
+    </div>
+    <div class="vmxTabBd">
+        <div class="roundBox">
+            <div class="vmxTabContent current">
+                <div id="grid_filter"></div>
+            </div>
+            <div class="vmxTabContent">
+                <div id="grid_nat"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

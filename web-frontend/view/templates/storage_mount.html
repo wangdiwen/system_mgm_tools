@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>设备管理</title>
+<script>
+
+function mount_process(grid) {
+    $$("#device").val("");
+    $$("#user").val("");
+    $$("#passwd").val("");
+    $$("#mount_point").val("");
+    $$("#dialog").dialog( "open" );
+}
+
+function umount_process(grid) {
+    var del_confirm = confirm('确定卸载此挂载点吗?')
+    if (!del_confirm)
+        return;
+    //$$.each($$('.trSelected', grid), function(key, value){
+        var mount_point = $$(grid).get(0).children[5].innerText.replace("\n", '');
+            
+        var data = ""
+        data += '{"mount-point":"' + mount_point + '"';
+        data += '}';
+    
+        var ret = restful_ajax({url:"/model/storage", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            //alert("卸载成功！")
+            $$("#grid").vmxGridReload();
+        }});
+    //});
+}
+function load_ui()
+{
+    var device_type = $$("#device_type").val();
+    $$("#mount_type > option").remove();
+    //$$("#mount_point > option").remove();
+    $$("#device_ui").show();
+    
+    $$("#user_ui").hide();
+    $$("#passwd_ui").hide();
+    $$("#mount_type_ui").show();
+    $$("#mount_point_ui").show();
+    
+    $$("#info_table").attr("height", 240);
+    
+    if (device_type == "disk")
+    {
+        $$("#mount_type").append('<option value="ext3" selected="selected">ext3</option>');
+        $$("#mount_type").append('<option value="ext2">ext2</option>');
+        $$("#mount_type").append('<option value="ext4">ext4</option>');
+        $$("#mount_type").append('<option value="xfs">xfs</option>');
+        $$("#mount_type").append('<option value="vfat">vfat</option>');
+        $$("#mount_type").append('<option value="ntfs">ntfs</option>');
+    }
+    if (device_type == "cdrom")
+    {
+        $$("#mount_type").append('<option value="iso9660" selected="selected">iso9660</option>');
+    }
+    if (device_type == "nfs")
+    {
+        $$("#mount_type").append('<option value="nfs" selected="selected">nfs</option>');
+    }
+    if (device_type == "samba")
+    {
+        $$("#info_table").attr("height", 300);
+        $$("#user_ui").show();
+        $$("#passwd_ui").show();
+        $$("#mount_type").append('<option value="cifs" selected="selected">cifs</option>');
+    }
+    /*if (device_type == "swap")
+    {
+        $$("#mount_type_ui").hide();
+        $$("#mount_point_ui").hide();
+        $$("#mount_type").append('<option value="swap" selected="selected">swap</option>');
+    }*/
+    if (device_type == "tmpfs")
+    {
+        $$("#info_table").attr("height", 210);
+        $$("#device_ui").hide();
+        $$("#mount_type").append('<option value="tmpfs" selected="selected">tmpfs</option>');
+    }
+    //for (var i = 0; i < 10; i++)
+    //{
+    //    $$("#mount_point").append('<option value="' + (device_type + i) + '"' + ( i== 0? ' selected="selected"' : '') +'>' + (device_type + i) + '</option>');
+    //}
+}
+
+$$(document).ready(function() {
+    $$("#grid").vmxGrid({
+        url : '/model/storage',
+        title: "设备管理", 
+        colModel : [
+            {
+                display : '设备名',
+                name : 'device',
+                width : 300,
+                sortable : false,
+                align : 'left'
+            },
+            {
+                display : '大小',
+                name : 'size',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '已使用',
+                name : 'used',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '使用百分比',
+                name : 'use%',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '挂载点',
+                name : 'mount-point',
+                width : "auto",
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del',
+            onpress : umount_process
+        }],
+        foot:[ 
+        {
+            name : '挂载',
+            bclass : 'add',
+            onpress : mount_process
+        }]
+    });
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:380});
+    $$( "input[id=modify]" ).click(function(event){
+            var device_type = $$("#device_type").val();
+            var mount_type = $$("#mount_type").val();
+            var device = $$("#device").val();
+            var mount_point = $$("#mount_point").val();
+            var startup = $$("#startup").val();
+            var permission = $$("#permission").val();
+            
+            var user = $$("#user").val();
+            var passwd = $$("#passwd").val();
+
+            if ($$("#device_ui").is(":visible") && device == "")
+            {
+                alert("设备名或地址名不能为空！");
+                return;
+            }
+            mount_point = "/mnt/" + mount_point
+            
+            if (device_type == "tmpfs")
+                device = "tmpfs"
+            
+            var retcode = true;
+            var data = ""
+            data += '{"device":"' + device + '","startup":"' + startup + '"';
+            if ($$("#mount_type_ui").is(":visible"))
+                data += ',"device-type":"' + mount_type + '"';
+            if ($$("#mount_point_ui").is(":visible"))
+                data += ',"mount-point":"' + mount_point + '"';
+            
+            if (user != "")
+                data += ',"username":"' + user + '"';
+            if (passwd != "")
+                data += ',"password":"' + passwd + '"';
+                
+            if (permission != "null")
+                data += ',"permission":"' + permission + '"';
+                
+            data += '}';
+            
+            var ret = restful_ajax({url:"/model/storage/" + device_type, type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown);
+            }, success:function()
+            {
+                alert("挂载成功！")
+                $$("#grid").vmxGridReload();
+                $$("#dialog").dialog( "close" );
+            }});
+            event.preventDefault();
+            
+    });
+    load_ui();
+    $$("#device_type").change(function()
+    {
+        load_ui();
+    });
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div id="grid"></div>
+<div id="dialog" title="挂载分区">
+    <table width="350" height="260" border="0" cellpadding="0" cellspacing="0" id="info_table">
+        <tr>
+          <td align="left" width="100">磁盘类型</td>
+          <td align="left">
+            <select id="device_type" class="ui-widget ui-widget-content ui-corner-all">
+                <option value="disk" selected="selected">DISK</option>
+            <!--    <option value="cdrom">CDROM</option> -->
+                <option value="nfs">NFS</option>
+                <option value="samba">SAMBA</option>
+            <!--        <option value="swap">SWAP</option> -->
+                <option value="tmpfs">TMPFS</option>
+             </select>
+          </td>
+        </tr>
+        <tr id="mount_type_ui">
+          <td align="left">挂载类型</td>
+          <td align="left">
+            <select id="mount_type" class="ui-widget ui-widget-content ui-corner-all">
+            </select>
+          </td>
+        </tr>
+        <tr id="device_ui">
+          <td align="left">设备/地址</td>
+          <td align="left">
+            <input type="text" id="device" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr id="mount_point_ui">
+          <td align="left">挂载点</td>
+          <td align="left">
+            /mnt/<input type="text" id="mount_point" size="15" class="ui-widget ui-widget-content ui-corner-all">
+          </td>
+        </tr>
+        <tr id="mount_point_ui">
+          <td align="left">挂载点权限</td>
+          <td align="left">
+            <select id="permission" class="ui-widget ui-widget-content ui-corner-all">
+                <option value="null" selected="selected">默认(可执行)</option>
+                <option value="read-only">只读</option>
+                <option value="read-write">读写</option>
+                <option value="read-exec">可执行</option>
+                <option value="read-write-exec">读写/可执行</option>
+             </select>
+          </td>
+        </tr>
+        <tr id="user_ui">
+          <td align="left">用户名</td>
+          <td align="left">
+            <input type="text" id="user" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr id="passwd_ui">
+          <td align="left">密码</td>
+          <td align="left">
+            <input type="password" id="passwd" size="20" class="ui-widget ui-widget-content ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td align="left">开机挂载？</td>
+          <td align="left">
+            <select id="startup" class="ui-widget ui-widget-content ui-corner-all">
+                <option value="on" selected="selected">on</option>
+                <option value="off">off</option>
+             </select>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" align="center"><input type="button" id="modify" class="add" value="挂载" />
+          </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

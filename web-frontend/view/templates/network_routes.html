@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>路由管理</title>
+<script>
+
+function delete_process(grid) {
+    
+    var del_confirm = confirm('确定删除此项吗?')
+    if (!del_confirm)
+        return;
+            
+    //$$.each($$('.trSelected', grid), function(key, value){
+        var targetaddr = $$(grid).get(0).children[1].innerText.replace("\n", '');
+        var gateway = $$(grid).get(0).children[2].innerText.replace("\n", '');
+        var netmask = $$(grid).get(0).children[3].innerText.replace("\n", '');
+        var _interface = $$(grid).get(0).children[8].innerText.replace("\n", '');
+            
+        if (netmask == "255.255.255.255")
+            type = "host"
+        else if (targetaddr == "default")
+            type = "default"
+        else if (targetaddr == "0.0.0.0" && netmask == "0.0.0.0")
+            type = "default"
+        else
+            type = "net"
+            
+            
+        var data = ""
+        data += '{"type":"' + type + '","target":"' + targetaddr + '","netmask":"' + netmask + '"';
+        if (gateway != "*"
+           && isIp(gateway))
+            data += ',"gateway":"' + gateway + '"';
+                
+        data += ',"dev":"' + _interface + '"';
+                
+        data += '}';
+
+        var ret = restful_ajax({url:"/model/network/route", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            //alert("删除成功！")
+            $$("#grid").vmxGridReload();
+        }});
+    //});
+}
+
+function add_process(grid) {
+    var retcode = false
+    var ret = restful_ajax({url:"/model/network/adaptors/devices", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        $$("#interface > option").remove();
+        $$("#interface").append('<option value="none" selected="selected">None</option>');
+        var ret_data = $$.parseJSON(ret)
+        for (var i = 0; i < ret_data.length; i++)
+        {
+            $$("#interface").append('<option value="' + ret_data[i] +'">' + ret_data[i] + '</option>');
+        }
+    }
+    
+    $$("#type").val("net");
+    $$("#targetaddr").attr("disabled", false);
+    $$("#netmask").attr("disabled", false);
+
+    $$("#targetaddr").val("");
+    $$("#netmask").val("");
+    $$("#gateway").val("");
+    $$("#interface").val("none");
+
+    $$( "#dialog" ).dialog( "open" );
+}
+
+
+
+$$(document).ready(function() {
+    $$("#grid").vmxGrid({
+        url : '/model/network/route',
+        title : '路由管理',
+        colModel : [
+            {
+                display : '目标',
+                name : 'destination',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '网关',
+                name : 'gateway',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '掩码',
+                name : 'genmask',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Flags',
+                name : 'flags',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Metric',
+                name : 'metric',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Ref',
+                name : 'ref',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'Use',
+                name : 'use',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '接口',
+                name : 'iface',
+                width : 'auto',
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del',
+            onpress : delete_process
+        }],
+        foot:[ 
+        {
+            name : '添加',
+            bclass : 'add',
+            onpress : add_process
+        }]
+    });
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:380});
+    $$( "input[id=add]" ).click(function(){
+            var type = $$("#type").val();
+            var targetaddr = $$("#targetaddr").val();
+            var netmask = $$("#netmask").val();
+            var gateway = $$("#gateway").val();
+            var _interface = $$("#interface").val();
+            if (_interface == "none" && gateway == "")
+            {
+                alert("网关和接口至少选一项")
+                return;
+            }
+            if ((type != "host" && netmask == "" )|| targetaddr == "")
+            {
+                alert("目标地址或掩码不能为空！")
+                return;
+            }
+            
+            var is_ip = true;
+            if ((type != "host" && !isMask(netmask))
+                || (gateway !="" && !isStrictIp(gateway) ))
+            {
+                is_ip = false;
+            }
+            if(targetaddr != "default")
+            {
+                if (type == "host" && !isStrictIp(targetaddr))
+                    is_ip = false;
+                else if(type == "net" && !isNetWorkIp(targetaddr))
+                    is_ip = false;
+            }
+            
+            if (!is_ip)
+            {
+                alert("地址格式错误！")
+                return;
+            }
+
+            var data = ""
+            data += '{"type":"' + type + '","target":"' + targetaddr + '","netmask":"' + netmask + '"';
+            if (gateway != "")
+                data += ',"gateway":"' + gateway + '"';
+            if (_interface != "none")
+                data += ',"dev":"' + _interface + '"';
+                
+            data += '}';
+
+            var ret = restful_ajax({url:"/model/network/route", type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                alert("添加成功！")
+                $$("#grid").vmxGridReload();
+                $$("#dialog").dialog( "close" );
+            }});
+            
+    });
+    $$("#type").change(function(){
+        var type = $$("#type").val();
+        if (type == "default")
+        {
+            $$("#targetaddr").val(type);
+            $$("#netmask").val("0.0.0.0");
+            $$("#targetaddr").attr("disabled", true);
+            $$("#netmask").attr("disabled", true);
+        }
+        else
+        {
+            if ($$("#targetaddr").val() == "default")
+                $$("#targetaddr").val("");
+            if ($$("#netmask").val() == "0.0.0.0")
+                $$("#netmask").val("");
+            $$("#targetaddr").attr("disabled", false);
+            if (type == "host")
+                $$("#netmask").attr("disabled", true);
+            else
+                $$("#netmask").attr("disabled", false);
+        }
+    });
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div id="grid"></div>
+<div id="dialog" title="添加路由">
+    <table width="350" height="240" border="0" cellpadding="0" cellspacing="0" id="info_table">
+        <tr>
+          <td align="left"></td>
+          <td align="left">
+            网关和接口至少选一项
+          </td>
+        </tr>
+        <tr>
+          <td width="100" align="left">目标类型</td>
+          <td width="200" align="left">
+            <select id="type" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="net" selected="selected">NET</option>
+              <option value="host">HOST</option>
+              <option value="default">DEFAULT</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td align="left">目标地址</td>
+          <td align="left">
+            <input type="text" id="targetaddr" size="20" class="ui-widget ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td align="left">掩码</td>
+          <td align="left">
+            <input type="text" id="netmask" size="20" class="ui-widget ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td align="left">网关(可选)</td>
+          <td align="left">
+            <input type="text" id="gateway" size="20" class="ui-widget ui-corner-all" />
+          </td>
+        </tr>
+        <tr>
+          <td align="left">接口(可选)</td>
+          <td align="left">
+            <select id="interface" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="none" selected="selected">None</option>
+              <option value="eth0">eth0</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" align="center"><input type="button" id="add" class="add" value="添加" />
+          </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

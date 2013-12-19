@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="../templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+
+<title>进程管理</title>
+<script>
+function del_process(grid)
+{
+    var pid = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    $$("#del_pid").val(pid);
+    $$("#del_dialog").dialog("open" );
+}
+function edit_process(grid)
+{
+    //alert($$(grid).get(0).children[2].innerText.replace("\n", ''));
+    //$$.each($$('.trSelected', grid), function(key, value){
+        var pid = $$(grid).get(0).children[2].innerText.replace("\n", '');
+        var rtprio = $$(grid).get(0).children[3].innerText.replace("\n", '');
+        var nice = $$(grid).get(0).children[5].innerText.replace("\n", '');
+        var ret = restful_ajax({url:"/model/system/process/" + pid, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            retcode = false
+        }, success:function()
+        {
+            retcode = true;
+        }});
+        if (retcode)
+        {
+            var ret_data = $$.parseJSON(ret)
+            var priority_type = ret_data[0]["priority_type"];
+            $$("#priority_type").val(priority_type)
+            if (priority_type == "SCHED_OTHER")
+            {
+                $$("#priority").val(nice);
+            }
+            if (priority_type == "SCHED_FIFO" || priority_type ==  "SCHED_FIFO")
+            {
+                $$("#priority").val(rtprio);
+            }
+        }
+        //$$( "#priority" ).val(priority)
+        $$( "#pid" ).val(pid)
+    //});
+    $$( "#priority_dialog" ).dialog("open" );
+}
+
+
+$$(function() {
+    $$( "input[id=priority_submit]" ).click(function(){
+        var pid = $$( "#pid" ).val();
+        var priority = $$( "#priority" ).val();
+        var priority_type = $$("#priority_type").val();
+        
+        if (!isDigit(priority))
+        {
+            alert("优先级格式错误，只能是数字！！！");
+            return false;
+        }
+        
+        var Max=99
+        var Min=1
+        if  (priority_type == "SCHED_OTHER")
+        {
+            Max = 19;
+            Min = -20;
+        }
+        if ( priority > Max || priority < Min ) {
+            alert(priority + "优先级错误：只能选择" + Min + "-" + Max + "之间的数字！！！");
+            return false;
+        }
+        
+        
+        var data = ""
+        data += '{"pid":"' + pid + '","priority":"' + priority + '","priority_type":"' + priority_type + '"';
+        data += '}';
+            
+        var ret = restful_ajax({url:"/model/system/process", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            alert("修改成功！")
+            $$(".vmxGrid").vmxGridReload();
+            $$("#priority_dialog").dialog( "close" );
+        }});
+    });
+    $$( "input[id=del_submit]" ).click(function(){
+        var pid = $$("#del_pid").val();
+        var signal = $$("#stop_type").val();
+        var data = '{"pid":"' + pid + '", "signal":"' + signal + '"}';
+        
+        var ret = restful_ajax({url:"/model/system/process", type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            alert("操作成功！")
+            $$(".vmxGrid").vmxGridReload();
+            $$("#del_dialog").dialog( "close" );
+        }});
+    });
+    
+    /*$$( "input[id=cancel_submit]" ).button().click(function(event){
+        $$("#del_dialog").dialog( "close" );
+    });*/
+});
+
+function display_info()
+{
+    $$(".vmxGrid").vmxGridReload();
+    setTimeout(display_info, parseInt($$("#flush").val()));
+}   
+
+$$(document).ready(function() {
+    $$(".vmxGrid").vmxGrid({
+        url : '/model/system/process',
+        title: "进程信息", 
+        colModel : [
+            {
+                display : '用户',
+                name : 'user',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '进程ID',
+                name : 'pid',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            /*{
+                display : 'SIZE',
+                name : 'size',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'VSIZE',
+                name : 'vsize',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },*/
+            {
+                display : '实时优先级',
+                name : 'rtprio',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },{
+                display : '动态优先级',
+                name : 'priority',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },{
+                display : '普通优先级',
+                name : 'nice',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            /*{
+                display : '启动时间',
+                name : 'time',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },*/
+            {
+                display : '状态',
+                name : 'stat',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '命令',
+                name : 'command',
+                width : 'auto',
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '删除',
+            bclass : 'del',
+            onpress : del_process
+        },{
+            name : '修改',
+            bclass : 'edit',
+            onpress : edit_process
+        }],
+        foot:[
+        {
+            html :'刷新间隔<select id="flush">' +
+            '<option value="10000" selected="selected">10秒</option>' +
+            '<option value="8000">8秒</option>' +
+			'<option value="6000">6秒</option>' +
+            '<option value="4000">4秒</option>' +
+			'<option value="2000">2秒</option>' +
+            '</select>'
+        }
+        ]
+    });
+    $$("#priority_dialog" ).dialog({autoOpen: false, modal: true, width:330});
+    $$("#del_dialog" ).dialog({autoOpen: false, modal: true, width:300});
+    
+    var priority_spinner = $$( "#priority" ).spinner({
+        spin: function( event, ui ) {
+            var Max=99
+            var Min=1
+            var priority_type = $$("#priority_type").val();
+            if  (priority_type == "SCHED_OTHER")
+            {
+                Max = 19;
+                Min = -20;
+            }
+            if ( ui.value > Max ) {
+                $$( this ).spinner( "value", Min );
+                return false;
+            } else if ( ui.value < Min ) {
+                $$( this ).spinner( "value", Max );
+                return false;
+            }
+        }
+    });
+    $$("#priority_type").change(function(param)
+    {
+        var priority_type = $$("#priority_type").val();
+        if (priority_type == "SCHED_OTHER")
+        {
+            $$("#priority").val(0);
+        }else
+        {
+            $$("#priority").val(1);
+        }
+    });
+    
+    setTimeout(display_info, parseInt($$("#flush").val()));
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div class="vmxGrid"></div>
+<div id="priority_dialog" title="优先级设置">
+    <table width="300" height="120" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="left" width="80">调度方式：</td>
+          <td align="left">
+            <select id="priority_type" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="SCHED_FIFO" selected="selected">SCHED_FIFO</option>
+              <option value="SCHED_RR">SCHED_RR</option>
+              <option value="SCHED_OTHER">SCHED_OTHER</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td align="left">优先级：</td>
+          <td align="left">
+            <input id="priority" name="value" size="5" />
+            <input id="pid" type="hidden" size="5" />
+          </td>
+        </tr>
+        <tr>
+          <td align="center" colspan="2"><input id="priority_submit" type="button" class="edit" value="修改" /></td>
+        </tr>
+    </table>
+</div>
+
+<div id="del_dialog" title="停止进程">
+    <table width="270" height="80" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="left" width="80">停止方式：</td>
+          <td align="left"><select id="stop_type" class="ui-widget ui-widget-content ui-corner-all">
+              <option value="SIGKILL" selected="selected">关闭</option>
+              <option value="SIGTSTP">挂起</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" colspan="2"><input id="del_submit" type="button" class="yes" value="确定" /><!--<input id="cancel_submit" type="submit" value="取消" />-->
+          <input type="hidden" id="del_pid" />
+          </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

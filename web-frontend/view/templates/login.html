@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>WEB管理系统登录</title>
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+
+<script>
+$$(function() {
+    $$( "input[type=submit]" ).click(function(event){
+            var name = $$("#name").val();
+            var passwd = $$("#passwd").val();
+            if (name == "" 
+                || passwd == "")
+            {
+                alert("用户名或密码不能为空!");
+                event.preventDefault();
+                return;
+            }
+            
+            if (hasChinese(name)
+                ||hasChinese(passwd))
+            {
+                alert("用户名或密码不能包含中文！");
+                event.preventDefault();
+                return;
+            }
+            
+            var data = '{"name":"' + name + '","passwd":"' + passwd + '"}';
+            var ret = restful_ajax({url:"/view/login", type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                //alert("登录成功！")
+                //$$("#url_jump").click();
+                window.location.href = "/"
+            }});
+            event.preventDefault();
+    });
+});
+
+$$(document).ready(function() {
+    if ( self.frameElement != null && (self.frameElement.tagName == "IFRAME" || self.frameElement.tagName == "iframe") )
+    {
+　　    window.parent.location.href="/view/login"
+　　}
+    else
+    {
+        var ret = restful_ajax({url:"/model/auth", type:"GET", data:"", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            //alert(XMLHttpRequest.status);
+            //alert(XMLHttpRequest.readyState);
+            //alert(textStatus);
+            //alert(errorThrown);
+        }, success:function()
+        {
+        	//$$("#url_jump").click();
+            window.location.href = "/"
+        }});
+    }
+    $$("#name").focus();
+});
+</script>
+<style type="text/css">
+<!--
+body {
+	background-color: #D9D9D9;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family:"Courier New", Courier, monospace
+}
+
+input[type=submit] {
+	height:25px;
+    border: 1px solid #CCCCCC;
+    line-height:25px;
+    font-size:13px;
+
+	background: url(/view/templates/images/user.png) no-repeat left;
+	background-color:#ece9d8;
+    padding-left: 25px;
+}
+input[type="submit"]:hover {
+    background-color:#bbbbbb;
+    cursor:pointer;
+}
+#info_table {
+	font-size:13px;
+	background:url(/view/templates/images/loginbox.png)  no-repeat left;
+}
+#info_table thead th {
+	height:35px;
+	color:#FFFFFF;
+	line-height:40px;
+	padding-top:5px;
+    *padding-top:10px;
+}
+
+#info_table tfoot td {
+	height:45px;
+	padding-top:5px;
+    *padding-top:2px;
+}
+#info_table tbody tr {
+    font-size:12px;
+	padding:5px;
+    filter:alpha(Opacity=90);
+	-moz-opacity:0.9;
+	opacity: 0.9;
+	padding-left:10px;
+	padding-right:10px;
+}
+#info_table tbody td {
+	height:30px;
+    *height:25px;
+}
+-->
+</style></head>
+
+<body>
+<div style="position:absolute; width:100%; height:100%; z-index:-2"> 
+    <img style="position:fixed;" src="/view/templates/images/loginbg.jpg" height="100%" width="100%" /> 
+</div>
+<div style="position:absolute; width:100%; height:100%; z-index:-1"> 
+    <img style="position:fixed;" src="/view/templates/images/bg.png" /> 
+</div>
+<div style="position:absolute; width:100%; height:100%;"> 
+<table width="100%" height="100%" border="0" align="center" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="center">
+	<form id="form1" name="form1" method="post" action="return false;">
+		<table width="342" height="198" border="0" align="center" cellpadding="0" cellspacing="0" id="info_table">
+			<thead>
+				<tr>
+				  <th colspan="4" align="left" style="padding-left:5px;">基础系统WEB管理</th>
+				</tr>
+			</thead>
+			<tbody>
+			  <tr>
+			    <td width="82" rowspan="4" align="center" valign="middle" bgcolor="#B5D3F7"><img src="/view/templates/images/loginicon.png" /></td>
+			    <td height="25" align="right" bgcolor="#B5D3F7"></td>
+			    <td align="left" bgcolor="#B5D3F7"></td>
+			    <td align="left"></td>
+			  </tr>
+			  <tr>
+			    <td width="80" align="right" bgcolor="#B5D3F7" style="padding-left:5px;">用户名：</td>
+			    <td width="200" align="left" bgcolor="#B5D3F7">
+				  <input type="text" id="name" size="20" class="ui-widget ui-widget-content ui-corner-all" />          </td>
+				<td width="4" align="left"></td>
+			  </tr>
+			  <tr>
+			    <td align="right" bgcolor="#B5D3F7" style="padding-left:5px;">密&nbsp;码：</td>
+			    <td align="left" bgcolor="#B5D3F7"><input name="text" type="password" class="ui-widget ui-widget-content ui-corner-all" id="passwd" size="20" /></td>
+				<td align="left"></td>
+			  </tr>
+		      <tr>
+		        <td align="right" bgcolor="#B5D3F7"></td>
+			    <td align="left" bgcolor="#B5D3F7"></td>
+			    <td align="left"></td>
+			  </tr>
+			</tbody>
+			<tfoot>
+				<tr>
+				  <td colspan="4" align="center" valign="top"><input type="submit" value="登录" /></td>
+				</tr>
+			</tfoot>
+		</table>
+	</form>
+	<a id="url_jump" href="/"></a>
+</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

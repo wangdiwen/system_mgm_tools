@@ -1,0 +1,618 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>阵列信息</title>
+<script>
+
+var json_data = null;
+////////////////////////////////////////////////////////////
+function register_event(callback, ask, param) {
+    var cmd = callback;
+    if (typeof param != 'undefined') {
+        cmd += ',' + param;
+    }
+    $$('#new_raid_ask').html('<p style="text-align:center">'+ ask +'<br /><br /><br />\
+          <input type="button" class="ask" id="ask_ok" value="确认" onclick="ask_ok('+ cmd +');"></input> \
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+          <input type="button" class="ask" id="ask_cancel" value="取消" onclick="ask_cancel();"></input> \
+          </p>');
+    $$('#new_raid_ask').dialog('open');
+}
+function ask_ok(callback, param) {
+    $$('#new_raid_ask').dialog('close');
+    // alert('处理东西。。。' + '参数： ' + param);
+    $$("#new_raid_progress").html('<p style="text-align:center">正在进行处理 。。。</p>');
+    $$("#new_raid_progress").dialog('open');
+    if (typeof param != 'undefined') {
+        callback(param);
+    }
+    else {
+        callback();
+    }
+}
+function ask_cancel() {
+    $$('#new_raid_ask').dialog('close');
+}
+function checking_result(ret_code) {
+    if (ret_code) {
+        $$("#new_raid_progress").html('<p style="text-align:center">处理 成功！</p>');
+    }
+    else {
+        $$("#new_raid_progress").html('<p style="text-align:center">处理 失败！</p>');
+    }
+    setTimeout(new_raid_refresh, 2000);
+}
+function new_raid_refresh() {
+    $$("#new_raid_progress").dialog('close');
+    window.location.reload();
+}
+////////////////////////////////////////////////////////////
+function raid_base_info() {
+    var ret_code = false;
+    var base_info = restful_ajax({  url: "/model/storage/raid",
+                                    type: "GET",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        // alert(base_info);
+        json_data = $$.parseJSON(base_info);
+        if (json_data) {
+            var dev_name = json_data['device name'];
+            if (typeof dev_name != 'undefined') {
+                var soft_ver = json_data['version'];
+                var create_time = json_data['creation time'];
+                var raid_type = json_data['raid level'];
+                var all_volume = json_data['array size'];
+                var all_count = json_data['total devices'];
+                var up_time = json_data['update time'];
+
+                var raid_str = "<tr>"+
+                                "<td>"+dev_name+"</td>"+
+                                "<td>"+soft_ver+"</td>"+
+                                "<td>"+create_time+"</td>"+
+                                "<td>"+raid_type+"</td>"+
+                                "<td>"+all_volume+"</td>"+
+                                "<td>"+ all_count+"</td>"+
+                                "<td>"+up_time +"</td>"+
+                                "</tr>";
+                $$("#base_info").append(raid_str);
+            }
+        }
+    }
+}
+function raid_other_info() {
+    $$("#raid_other_info").dialog("open");
+    var content = '';
+
+    if (typeof json_data != "undefined") {
+        var status = json_data['state'];
+        if (typeof status != 'undefined') {
+            var used_volume = json_data['used dev size'];
+            var raid_count = json_data['raid devices'];
+            var persistence = json_data['persistence'];
+            var layout = json_data['layout'];
+            var chunk = json_data['chunk size'];
+            var name = json_data['name'];
+            var uuid = json_data['uuid'];
+            var events = json_data['events'];
+
+            content = "<table> \
+                        <tr><td align=\"right\">单块磁盘有效容量：</td><td>"+ used_volume +"</td></tr> \
+                        <tr><td align=\"right\">RAID数量：</td><td>"+ raid_count +"</td></tr> \
+                        <tr><td align=\"right\">持久化状态：</td><td>"+ persistence +"</td></tr> \
+                        <tr><td align=\"right\">阵列状态：</td><td>"+ status +"</td></tr> \
+                        <tr><td align=\"right\">阵列Layout：</td><td>"+ layout +"</td></tr> \
+                        <tr><td align=\"right\">超级快大小：</td><td>"+ chunk  +"</td></tr> \
+                        <tr><td align=\"right\" align=\"right\">主机信息：</td><td>"+ name +"</td></tr> \
+                        <tr><td align=\"right\">阵列UUID：</td><td>"+ uuid +"</td></tr> \
+                        <tr><td align=\"right\">阵列事件：</td><td>"+ events +"</td></tr> \
+                        </table>";
+        }
+        else {
+            content = '没有信息哦 ^_^';
+        }
+    }
+
+    $$("#raid_other_info").html(content);
+}
+
+function raid_start() {
+    var ret_code = false;
+    var alarm_info = restful_ajax({  url: "/model/storage/raid/start",
+                                    type: "PUT",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        alert('启动成功！');
+        window.location.reload();
+    }
+    else {
+        alert('启动失败！');
+    }
+}
+function raid_stop() {
+    var ret_code = false;
+    var alarm_info = restful_ajax({  url: "/model/storage/raid/stop",
+                                    type: "PUT",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        alert('停止成功！');
+        window.location.reload();
+    }
+    else {
+        alert('停止失败！');
+    }
+}
+function resize_raid_volume() {
+    var ret_code = false;
+    var alarm_info = restful_ajax({  url: "/model/storage/raid/resizefs",
+                                    type: "PUT",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        alert('扩容阵列文件系统 成功！');
+        window.location.reload();
+    }
+    else {
+        alert('扩容阵列文件系统 失败！');
+    }
+}
+
+function is_alarming() {
+    var ret_code = false;
+    var alarm_info = restful_ajax({  url: "/model/storage/raid/alarm",
+                                    type: "GET",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        if (alarm_info != '0') {
+            return true;
+        }
+    }
+    return false;
+}
+function raid_alarm() {
+    var ret_code = false;
+    var alarm_info = restful_ajax({  url: "/model/storage/raid/alarm",
+                                    type: "GET",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        // alert(alarm_info)
+        var raid_str = '';
+        if (alarm_info == '1') {
+            raid_str = '<tr><td width="5%">警报？ </td><td style="color:red" align="center"><b>'+ '警报！！有设备损坏' +'</b></td><td></td></tr>';
+        }
+        else if (alarm_info == '2') {
+            raid_str = '<tr><td width="5%">警报？ </td><td style="color:red" align="center"><b>'+ '警报！！有设备被移除' +'</b></td><td></td></tr>';
+        }
+        else if (alarm_info == '3') {
+            raid_str = '<tr><td width="5%">警报？ </td><td style="color:red" align="center"><b>'+ '警报！！阵列停止工作' +'</b></td><td></td></tr>';
+        }
+        else {
+            raid_str = '<tr><td width="5%">警报？ </td><td style="color:green" align="center"><b>'+ '没有报警' +'</b></td><td></td></tr>';
+        }
+
+        $$("#new_raid_alarm").html(raid_str);
+    }
+
+    setTimeout(raid_alarm, 5000);
+}
+////////////////////////////////////////////////////////////
+// test ...
+function new_raid_test_progress() {
+    register_event('simple_event', '确定要进行测试吗？');
+}
+function simple_event(num) {
+    setTimeout(function() {
+        var ret_code = false;
+        var ret_info = restful_ajax({  url: "/model/storage/raid/test",
+                                        type: "GET",
+                                        async: false,
+                                        error: function(XMLHttpRequest, status, error) {
+                alert(error);
+            },
+            success:function() {
+                ret_code = true;
+            }
+        });
+        checking_result(ret_code);
+    }, 1000);
+}
+
+////////////////////////////////////////////////////////////
+
+function new_raid_test_alarm() {
+    var ret_code = false;
+    var ret_info = restful_ajax({  url: "/model/storage/raid/alarm",
+                                    type: "GET",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    var msg = '';
+    if (ret_code) {
+        if (ret_info == '0') {
+            msg = '没有报警';
+        }
+        else if (ret_info == '1') {
+            msg = '发现有设备损坏 ！！！';
+        }
+        else if (ret_info == '2') {
+            msg = '发现有设备被移除 ！！！';
+        }
+    }
+    alert(msg);
+}
+function new_raid_refresh_backend() {
+    // refresh backend interface
+    var ret_code = false;
+    var ret_info = restful_ajax({  url: "/model/storage/raid/refresh",
+                                    type: "GET",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        // alert(ret_info);
+        // window.location.reload();
+    }
+    setTimeout(new_raid_refresh_backend, 2000);
+}
+function new_raid_info() {
+    var ret_code = false;
+    var raid_info = restful_ajax({  url: "/model/storage/raid/perfect",
+                                    type: "GET",
+                                    async: false,
+                                    error: function(XMLHttpRequest, status, error) {
+            alert(error);
+        },
+        success:function() {
+            ret_code = true;
+        }
+    });
+
+    if (ret_code) {
+        // alert(new_raid_info);
+        var new_info = $$.parseJSON(raid_info);
+        var content = '<tr><td width="5%">盘位</td><td width="10%">设备名称</td><td width="15%">状态</td><td width="20%">操作 </td></tr>';
+        var _num = 0;
+        if (new_info) {
+            for (var key in new_info) {
+                content += '<tr><td>' + key + '</td><td id="new_raid_device_' + _num + '">' + new_info[key]['device'] + '</td>';
+
+                // add operation button or not
+                var grade_1 = new_info[key]['status'].substr(0, 1);
+                var grade_2 = new_info[key]['status'].substr(1, 1);
+                if (grade_1 == '0') {
+                    content += '<td>初始化状态</td><td>无操作</td>';
+                }
+                else if (grade_1 == '2') {
+                    if (grade_2 == '0') {
+                        content += '<td>发现新设备</td><td><input type="button" class="new_raid" id="new_raid_add_new" value="添加新设备" onclick="new_add_device_ask(' + _num + ');"></input></td>';
+                    }
+                    else if (grade_2 == '1') {
+                        content += '<td>发现新设备</td><td>出现非法跳槽，无法添加到阵列</td>';
+                    }
+                }
+                else if (grade_1 == '3') {
+                    content += '<td>空槽位</td><td>无操作</td>';
+                }
+                else if (grade_1 == '1') {
+                    if (grade_2 == '0') {
+                        content += '<td>初始化状态</td><td>无操作</td>';
+                    }
+                    else if (grade_2 == '1') {
+                        content += '<td>正常工作</td><td><input type="button" class="new_raid" id="new_raid_remove" value="强制移除" onclick="new_remove_device_force_ask('+ _num +');"></input></td>';
+                    }
+                    else if (grade_2 == '2') {
+                        content += '<td>损坏</td><td><input type="button" class="new_raid" id="new_raid_remove" value="移除" onclick="new_remove_device_ask('+ _num +');"></input></td>';
+                    }
+                    else if (grade_2 == '3') {
+                        content += '<td>已被移除</td><td><input type="button" class="new_raid" id="new_raid_active" value="激活" onclick="new_active_device_ask('+ _num +');"></input></td>';
+                    }
+                    else if (grade_2 == '4') {
+                        content += '<td>已被移除，空槽位</td><td>请插入新磁盘 ！！！</td>';
+                    }
+                }
+                content += '</tr>';
+                _num++;
+            }
+        }
+
+
+        $$("#new_raid_manager").html(content);
+    }
+
+    setTimeout(new_raid_info, 5000);
+}
+
+////////////////////////////////////////////////////////////
+function new_add_device_ask(num) {
+    register_event('new_add_device', '确定要添加新设备吗？',num);
+}
+function new_remove_device_ask(num) {
+    register_event('new_remove_device', '确定要移除该设备吗？', num);
+}
+function new_remove_device_force_ask(num) {
+    register_event('new_remove_device_force', '确定强制移除该设备吗？', num);
+}
+function new_active_device_ask(num) {
+    register_event('new_active_device', '确定要激活该设备吗？', num);
+}
+
+function new_add_device(num) {
+    setTimeout(function() {
+        var disk_name = $$('#new_raid_device_' + num).text();
+        // alert(disk_name);
+        // return;
+        if (! disk_name) {
+            alert('没有发现有效的磁盘设备！');
+            return;
+        }
+
+        // alert('【提醒】：点击 “确认” 后，请不要做其他操作，耐心等待结果返回 ！！！');
+        var ret_code = false;
+        var ret_info = restful_ajax({  url: "/model/storage/raid/" + disk_name,
+                                        type: "POST",
+                                        async: false,
+                                        error: function(XMLHttpRequest, status, error) {
+                alert(error);
+            },
+            success:function() {
+                ret_code = true;
+            }
+        });
+
+        checking_result(ret_code);
+    }, 1000);
+}
+function new_remove_device(num) {
+    setTimeout(function() {
+        var disk_name = $$('#new_raid_device_' + num).text();
+        // alert(disk_name);
+        // return;
+        if (! disk_name) {
+            alert('没有发现有效的磁盘设备！');
+            return;
+        }
+        // checking is alarming or not
+
+        // alert('【提醒】：点击添加后，请不要做其他操作，耐心等待结果返回 ！！！');
+        var ret_code = false;
+        var ret_info = restful_ajax({  url: "/model/storage/raid/" + disk_name,
+                                        type: "DELETE",
+                                        async: false,
+                                        error: function(XMLHttpRequest, status, error) {
+                alert(error);
+            },
+            success:function() {
+                ret_code = true;
+            }
+        });
+        checking_result(ret_code);
+    }, 1000);
+}
+function new_remove_device_force(num) {
+    setTimeout(function() {
+        var disk_name = $$('#new_raid_device_' + num).text();
+        // alert(disk_name);
+        // return;
+        if (! disk_name) {
+            alert('没有发现有效的磁盘设备！');
+            return;
+        }
+        // checking is alarming or not
+        var is_alarm = is_alarming();
+        if (is_alarm) {
+            alert('当前处于警报状态，不可以移除设备！！！');
+            checking_result(false);
+            return;
+        }
+
+        // alert('【提醒】：点击添加后，请不要做其他操作，耐心等待结果返回 ！！！');
+        var ret_code = false;
+        var ret_info = restful_ajax({  url: "/model/storage/raid/" + disk_name,
+                                        type: "DELETE",
+                                        async: false,
+                                        error: function(XMLHttpRequest, status, error) {
+                alert(error);
+            },
+            success:function() {
+                ret_code = true;
+            }
+        });
+        checking_result(ret_code);
+    }, 1000);
+}
+function new_active_device(num) {
+    setTimeout(function() {
+        var disk_name = $$('#new_raid_device_' + num).text();
+        // alert(disk_name);
+        // return;
+        if (! disk_name) {
+            alert('没有发现有效的磁盘设备！');
+            return;
+        }
+
+        // alert('【提醒】：点击激活后，请不要做其他操作，等待结果返回 ！！！');
+        var ret_code = false;
+        var data = '{"active":"' + disk_name + '"}';
+        var alarm_info = restful_ajax({  url: "/model/storage/raid/active",
+                                        type: "PUT",
+                                        data: data,
+                                        async: false,
+                                        error: function(XMLHttpRequest, status, error) {
+                alert(error);
+            },
+            success:function() {
+                ret_code = true;
+            }
+        });
+        checking_result(ret_code);
+    }, 1000);
+}
+////////////////////////////////////////////////////////////
+
+$$(document).ready(function() {
+    $$("#raid_other_info").dialog({autoOpen: false, modal: true, width: 500});
+    $$("#new_raid_progress").dialog({autoOpen: false, modal: true, width: 300});
+    $$("#new_raid_ask").dialog({autoOpen: false, modal: true, width: 300});
+
+    new_raid_refresh_backend();  // test ...
+    raid_base_info();
+    raid_alarm();
+    new_raid_info();
+});
+
+</script>
+</head>
+<body>
+
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+    <thead>
+        <tr>
+          <th  colspan="10" align="left">磁盘阵列 RAID</th>
+        </tr>
+    </thead>
+
+    <tbody id="base_info">
+        <tr>
+            <td width="5%">设备名称</td><td width="5%">软件版本</td><td width="10%">创建时间</td><td width="5%">阵列类型</td><td width="10%">总容量</td><td width="5%">磁盘数量</td><td width="10%">更新时间</td>
+        </tr>
+
+    </tbody>
+
+    <tfoot>
+        <tr>
+          <td colspan="10" align="left"><input type="button" class="other" id="other_info" value="查看其它信息" onclick="raid_other_info();"</td>
+
+        </tr>
+    </tfoot>
+</table>
+<br />
+
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+    <thead>
+        <tr>
+          <th  colspan="5" align="left">阵列管理新版界面</th>
+        </tr>
+    </thead>
+
+    <tbody id="new_raid_alarm">
+    </tbody>
+    <tbody id="new_raid_manager">
+    </tbody>
+
+<!--     <tfoot>
+        <tr>
+          <td colspan="4" align="left">
+              <input type="button" class="new_raid" id="new_raid_status_detail" value="刷新后台状态" onclick="new_raid_refresh_backend();"></input>
+              <input type="button" class="new_raid" id="new_raid_status_detail" value="测试报警" onclick="new_raid_test_alarm();"></input>
+              <input type="button" class="new_raid" id="new_raid_status_detail" value="测试进度条" onclick="new_raid_test_progress();"></input>
+          </td>
+        </tr>
+    </tfoot> -->
+</table>
+<br />
+
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+    <thead>
+        <tr>
+          <th  colspan="6" align="left">阵列管理</th>
+        </tr>
+    </thead>
+
+    <tbody id="raid_spare_disk">
+    </tbody>
+
+
+    <tfoot>
+        <tr>
+          <td colspan="6" align="left">
+          Help: 移除损坏的磁盘设备
+          &nbsp;第一步：移除损坏设备；
+          &nbsp;第二步：手工更换硬盘；
+          &nbsp;第三步：激活新硬盘；
+          </td>
+        </tr>
+    </tfoot>
+
+    <!-- <tfoot>
+        <tr>
+            <td colspan="6" align="left">
+            <input type="button" class="other" id="raid_start" value="启动阵列" onclick="raid_start();"></input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="button" class="other" id="raid_start" value="停止阵列" onclick="raid_stop();"></input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="button" class="other" id="raid_start" value="加速扩容 RAID 文件系统" onclick="resize_raid_volume();"></input>
+            </td>
+        </tr>
+    </tfoot> -->
+</table>
+
+<div id="raid_other_info"></div>
+<div id="new_raid_progress"></div>
+<div id="new_raid_ask">
+
+</div>
+
+</body>
+</html>

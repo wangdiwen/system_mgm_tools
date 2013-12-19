@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>开机项管理</title>
+<script>
+
+function prev_process(grid) {
+    var position = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    var name = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    if (position == "0")
+        return;
+    position = parseInt(position) - 1;
+    var data = '{"name":"' + name + '","position":"' + position + '"}';
+    var ret = restful_ajax({url:"/model/software/startup", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+function next_process(grid)
+{
+    var position = $$(grid).get(0).children[1].innerText.replace("\n", '');
+    var name = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var size = $$("#grid").data("user_option").size;
+    if (parseInt(position) == size - 1)
+        return;
+        
+    position = parseInt(position) + 1;
+    var data = '{"name":"' + name + '","position":"' + position + '"}';
+    var ret = restful_ajax({url:"/model/software/startup", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        $$("#grid").vmxGridReload();
+    }});
+}
+function start_process(grid)
+{
+    var name = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var data = '{"name":"' + name + '"}';
+    var ret = restful_ajax({url:"/model/software/startup/apply", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("启动成功！")
+        //$$("#grid").vmxGridReload();
+    }});
+}
+
+function stop_process(grid)
+{
+    var name = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var data = '{"name":"' + name + '"}';
+    var ret = restful_ajax({url:"/model/software/startup/stop", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("关闭成功！")
+        //$$("#grid").vmxGridReload();
+    }});
+}
+
+
+function close_process(grid)
+{
+    var del_confirm = confirm('确定取消此项开机启动吗?')
+    if (!del_confirm)
+        return;
+    var name = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var data = '{"name":"' + name + '","startup":"off"}';
+    var ret = restful_ajax({url:"/model/software/startup/autostart", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        //alert("取消成功！")
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+function open_process(grid)
+{
+    var name = $$(grid).get(0).children[2].innerText.replace("\n", '');
+    var data = '{"name":"' + name + '","startup":"on"}';
+    var ret = restful_ajax({url:"/model/software/startup/autostart", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        //alert("激活成功！")
+        $$("#grid").vmxGridReload();
+    }});
+}
+
+$$(document).ready(function() {
+    $$("#grid").vmxGrid({
+        url : '/model/software/startup',
+        title : '开机项管理',
+        colModel : [
+            {
+                display : '位置',
+                name : 'position',
+                width : 50,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : '启动项',
+                name : 'name',
+                width : 120,
+                sortable : false,
+                align : 'left'
+            },
+            {
+                display : '是否开机启动',
+                name : 'startup',
+                width : "auto",
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : '取消开机启动',
+            bclass : 'del_red',
+            onpress : close_process
+        },
+        {
+            name : '激活开机启动',
+            bclass : 'yes',
+            onpress : open_process
+        },
+        {
+            name : '关闭',
+            bclass : 'stop',
+            onpress : stop_process
+        },
+        {
+            name : '启动',
+            bclass : 'start',
+            onpress : start_process
+        },
+        {
+            name : '上移',
+            bclass : 'prev',
+            onpress : prev_process
+        },{
+            name : '下移',
+            bclass : 'next',
+            onpress : next_process
+        }]
+    });
+});
+
+
+
+</script>
+</head>
+
+<body>
+<div id="grid"></div>
+</body>
+</html>

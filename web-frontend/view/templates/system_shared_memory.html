@@ -1,0 +1,267 @@
+$def with (data)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>sytem infomation</title>
+<link rel="stylesheet" href="/view/templates/js/flexigrid/flexigrid.pack.css">
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/flexigrid/flexigrid.pack.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+
+<script>
+var json_data = '$:data';
+
+function delete_process(com, grid) {
+    var len = $$('.trSelected', grid).length;
+    if(len < 1){
+        alert("请选择要删除的数据！");
+        return;
+    }
+    var del_confirm = confirm('Are you sure delete the ' + len + ' items?')
+    if (!del_confirm)
+        return;
+            
+    $$.each($$('.trSelected', grid), function(key, value){
+        var shmid = value.children[1].innerText.replace("\n", '');
+            
+            
+        var data = ""
+        data += '{"shmid":"' + shmid + '"';      
+        data += '}';
+
+        var ret = restful_ajax({url:"/model/system/shared-memory/detail", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(shmid + "删除失败！" + errorThrown)
+        }, success:function()
+        {
+            alert("删除成功！")
+            $$(".maingrid").flexReload();
+        }});
+    });
+}
+
+function detail_process(com, grid) {
+    var len = $$('.trSelected', grid).length;
+    if(len < 1){
+        alert("请选择要查看的数据！");
+        return;
+    }
+    if (len > 1)
+    {
+        alert("每次只能查看一组数据！");
+        return;
+    }
+    $$.each($$('.trSelected', grid), function(key, value){
+        var shmid = value.children[1].innerText.replace("\n", '');
+        var retcode = false
+        var ret = restful_ajax({url:"/model/system/shared-memory/detail/" + shmid, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            retcode = false
+        }, success:function()
+        {
+            retcode = true;
+        }});
+        if (retcode)
+        {
+            var ret_data = $$.parseJSON(ret)
+            var data = "";
+            for (var i in ret_data[0])
+            {
+                data += i + ":" + ret_data[0][i] + "<br />"
+            }
+            $$( "#dialog" ).html(data);
+        }
+    });
+    $$( "#dialog" ).dialog( "open" );
+}
+
+$$(function() {
+    $$( "input[type=submit]" ).button().click(function(event){
+            var max = $$("#max").val();
+            var total = $$("#total").val();
+            var min = $$("#min").val();
+            if (!isDigit(max) 
+                || !isDigit(min)
+                || !isDigit(total))
+            {
+                alert("格式错误!");
+                return;
+            }
+            if (parseInt(max) < parseInt(min))
+            {
+                alert("最大值不能小于最小值！");
+                return;
+            }
+            var data = '{"shmmax":"' + max + '","shmall":"' + total + '","shmmni":"' + min +'"}';
+            var ret = restful_ajax({url:"/model/system/shared-memory", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                alert("设置成功！")
+                window.location.reload()
+            }});
+            event.preventDefault();
+    });
+});
+
+$$(document).ready(function() {
+    var data = $$.parseJSON(json_data)
+    if (typeof data["shmall"] != "undefined")
+        //$$("#total").val((parseInt(data["shmall"])/1024/1024).toFixed(0) + "MB");
+        $$("#total").val(data["shmall"]);
+    if (typeof data["shmmax"] != "undefined")
+        //$$("#max").val((parseInt(data["shmmax"])/1024/1024).toFixed(0) + "MB");
+        $$("#max").val(data["shmmax"]);
+    if (typeof data["shmmni"] != "undefined")
+        $$("#min").val(data["shmmni"]);
+    
+    $$(".maingrid").flexigrid({
+        url : '/model/system/shared-memory/detail',
+        dataType : 'json',
+        method: 'GET',
+        cache: false,
+        colModel : [
+            {
+                display : 'key',
+                name : 'key',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'shmid',
+                name : 'shmid',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'owner',
+                name : 'owner',
+                width : 100,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'perms',
+                name : 'perms',
+                width : 80,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'bytes',
+                name : 'bytes',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'nattch',
+                name : 'nattch',
+                width : 60,
+                sortable : false,
+                align : 'center'
+            },
+            {
+                display : 'status',
+                name : 'status',
+                width : 'auto',
+                sortable : false,
+                align : 'left'
+            }
+        ],
+        buttons : [ 
+        {
+            name : 'Delete',
+            bclass : 'delete',
+            onpress : delete_process
+        }, {
+            name : 'Detail',
+            bclass : 'detail',
+            onpress : detail_process
+        }, {
+            separator : true
+        }],
+        preProcess: function(data)
+        {
+            var dump = {}
+            var d = {}
+            var count = 0
+            for (var i in data)
+            {
+                if (i == "rows" ||
+                    i == "total" ||
+                    i == "page")
+                    continue;
+                if (typeof data[i]["total"] != "undefined")
+                {
+                    d["total"] = data[i]["total"]
+                    continue;
+                }
+                if (typeof data[i]["page"] != "undefined")
+                {
+                    d["page"] = data[i]["page"]
+                    continue;
+                }
+                
+                dump[i] = data[i];
+                count++
+            }
+            if (typeof d["page"] == "undefined")
+                d["page"] = 1
+            if (typeof d["total"] == "undefined")
+                d["total"] = count
+            d["rows"] = dump
+            return d;
+        },
+        usepager : false,
+        usepager : true,
+        useRp : true,
+        rp : 15,
+        title : '共享内存管理',
+        showTableToggleBtn : false,
+        width : "auto",
+        height : "auto"
+    });
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:400});
+});
+</script>
+</head>
+
+<body>
+<table width="475" height="180" border="0" align="center" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="left">&nbsp;</td>
+          <td align="left">&nbsp;</td>
+        </tr>
+        <tr>
+          <td width="63" align="left">总大小</td>
+          <td width="412" align="left">
+            <input type="text" id="total" /> (B)          </td>
+        </tr>
+        <tr>
+          <td align="left">最大值</td>
+          <td align="left">
+            <input type="text" id="max" /> (B)        </td>
+        </tr>
+        <tr>
+          <td align="left">最小值</td>
+          <td align="left">
+            <input type="text" id="min" /> (B)        </td>
+        </tr>
+        <tr>
+          <td align="left">&nbsp;</td>
+          <td align="left"><input type="submit" value="修改" /></td>
+        </tr>
+</table>
+<table class="maingrid" style="display: none"></table>
+<div id="dialog" title="详情">
+
+</div>
+</body>
+</html>

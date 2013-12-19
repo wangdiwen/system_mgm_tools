@@ -1,0 +1,459 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>时间管理</title>
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<style type="text/css">
+.date_time {
+    width:150px;
+    height:150px;
+    overflow: show;
+}
+</style>
+<script>
+var date_num = new Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+
+function isLeapYear(pYear){
+    if((pYear%4==0 && pYear%100!=0)||(pYear%100==0 && pYear%400==0))
+        return true;
+    else
+        return false;
+}
+       
+function isDate(s)
+{
+    var patrn = /^\d{4}\-\d{1,2}-\d{1,2}$$/;
+    if (patrn.test(s))
+        return true;
+    return false;
+}
+function timer(init)
+{
+    var ret = sync_ajax("/model/system/time", "GET", data);
+    var data = $$.parseJSON(ret);
+    if (typeof init != "undefined"
+        && init)
+    {
+    
+        $$("#year > option").remove();
+        $$("#month > option").remove();
+        $$("#date > option").remove();
+        var i_year = parseInt(data["year"]);
+        var i_mon = parseInt(data["mon"]);
+        var i_date = parseInt(data["mday"]);
+        
+        var i = 0;
+        for (i = i_year - 25; i < i_year + 25; i++)
+        {
+            $$("#year").append('<option value="'+ i +'">'+ i +'</option>');
+        }
+        $$("#year").val(i_year);
+        
+        for (i = 0; i < 12; i++)
+        {
+            $$("#month").append('<option value="'+ (i + 1) +'">'+ (i + 1) +'</option>');
+        }
+        $$("#month").val(i_mon);
+        
+        $$("#year").change(function ()
+        {
+            var i_year = parseInt($$("#year").val());
+            var i_mon = parseInt($$("#month").val());
+            var i_date = parseInt($$("#date").val());
+            
+            if (i_mon != 2)
+                return;
+            
+            $$("#date > option").remove();
+            
+            var max_date = 28;
+            if (isLeapYear(i_year))
+                max_date = 29;
+                
+            for (i = 0; i < max_date; i++)
+            {
+                $$("#date").append('<option value="'+ (i + 1) +'">'+ (i + 1) +'</option>');
+            }
+        });
+        
+        $$("#month").change(function ()
+        {
+            var i_year = parseInt($$("#year").val());
+            var i_mon = parseInt($$("#month").val());
+            var i_date = parseInt($$("#date").val());
+            
+            var max_date = date_num[i_mon - 1];
+            if (isLeapYear(i_year) && i_mon == 2)
+                max_date = 29;
+            
+            $$("#date > option").remove();
+            
+            for (i = 0; i < max_date; i++)
+            {
+                $$("#date").append('<option value="'+ (i + 1) +'">'+ (i + 1) +'</option>');
+            }
+            
+            if (i_date < max_date)
+                $$("#date").val(i_date);
+            else
+                $$("#date").val(max_date);
+                
+        });
+        
+        
+        var max_date = date_num[i_mon - 1];
+        if (isLeapYear(i_year) && i_mon == 2)
+            max_date = 29;
+            
+        for (i = 0; i < max_date; i++)
+        {
+            $$("#date").append('<option value="'+ (i + 1) +'">'+ (i + 1) +'</option>');
+        }
+        $$("#date").val(i_date);
+        
+        var format = data["year"] + "-" + 
+                    (parseInt(data["mon"]) > 9 ? data["mon"] : ("0" + data["mon"])) + "-" +
+                    (parseInt(data["mday"]) > 9 ? data["mday"] : ("0" + data["mday"]));
+        $$("#datepicker" ).val(format)
+        hour_spinner.spinner( "value", data["hour"]);
+        minute_spinner.spinner( "value", data["min"]);
+        second_spinner.spinner( "value", data["sec"]);
+    }else
+    {
+        setTimeout(timer, 1000);
+    }
+    
+    var format = data["year"] + "-" + 
+                (parseInt(data["mon"]) > 9 ? data["mon"] : ("0" + data["mon"])) + "-" +
+                (parseInt(data["mday"]) > 9 ? data["mday"] : ("0" + data["mday"])) + " " +
+                (parseInt(data["hour"]) > 9 ? data["hour"] : ("0" + data["hour"])) + ":" +
+                (parseInt(data["min"]) > 9 ? data["min"] : ("0" + data["min"])) + ":" +
+                (parseInt(data["sec"]) > 9 ? data["sec"] : ("0" + data["sec"])) +
+                "&nbsp;" + data["zone"];
+    $$("#current_time").html(format)
+}
+
+function date_process()
+{
+        var year = $$("#year").val();
+        var mon = $$("#month").val();//parseInt($$("#month").val()) > 9 ? $$("#month").val() : ("0" + $$("#month").val());
+        var date = $$("#date").val();//parseInt($$("#date").val()) > 9 ? $$("#date").val() : ("0" + $$("#date").val());
+        
+        var date_f = year + "-" + mon + "-" + date;
+        //alert(date);
+        var hour = hour_spinner.spinner( "value");
+        var minute = minute_spinner.spinner( "value");
+        var second = second_spinner.spinner( "value");
+        if (!isDate(date_f))
+        {
+            alert("日期格式错误！");
+            return;
+        }
+        if (!isDigit(hour) || !isDigit(minute)
+            || hour > 23 || hour < 0
+            || minute > 59 || minute < 0
+            || second >59 || second < 0)
+        {
+            alert("时间格式错误！")
+            return;
+        }
+
+        var date_format = '{"year":"' + year + '","mon":"' + mon + '","mday":"' +  date + 
+                          '","hour":"' +  hour +'","min":"' +  minute +'","sec":"' +  second +'"}';
+        //alert(date_format);
+        var ret = restful_ajax({url:"/model/system/time", type:"PUT", data:date_format, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            alert(errorThrown)
+        }, success:function()
+        {
+            alert("设置成功！")
+            //window.location.reload()
+        }});
+        //event.preventDefault();
+}
+
+function flush_ntp_info()
+{
+    var retcode = false
+    var ret = restful_ajax({url:"/model/system/ntp", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        var ret_data = $$.parseJSON(ret)
+        var checked = true;
+        if (ret_data["status"] == "off"
+            ||ret_data["status"] == "" )
+            checked = false;
+        if (checked)
+        {
+            $$("#checkbox").attr("checked", true);
+            $$("[rel=ntp]").attr("disabled", false);
+        }else
+        {
+            $$("#checkbox").attr("checked", false);
+            $$("[rel=ntp]").attr("disabled", true);
+        }
+        
+        $$("#ntp_addr_list > option").remove();
+        var ntp_addr_list = ret_data["ntp"];
+        
+        for (var i = 0 ; i < ntp_addr_list.length ; i++)
+        {
+            $$("#ntp_addr_list").append('<option value="' + ntp_addr_list[i] + '">' + ntp_addr_list[i] + '</option>');
+        }
+    }
+    
+}
+
+function add_process()
+{
+    var ntp_addr = $$("#ntp_addr").val();
+    if (!isStrictIp(ntp_addr)
+        && !isURL(ntp_addr))
+    {
+        alert("地址格式不正确！");
+        return;
+    }
+    
+    var data = '["' + ntp_addr + '"]';
+
+    var ret = restful_ajax({url:"/model/system/ntp", type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("添加成功!");
+        flush_ntp_info();
+        $$( '#dialog').dialog('close' );
+    }});
+}
+
+function del_process()
+{
+    var ntp_addr = $$("#ntp_addr_list").val();
+    if (ntp_addr == null)
+    {
+        alert("请选择要删除的地址！");
+        return;
+    }else
+    {
+        var del_confirm = confirm('确定删除' + ntp_addr + '吗?')
+        if (!del_confirm)
+            return;
+    }
+    
+    var data = '["' + ntp_addr + '"]';
+
+    var ret = restful_ajax({url:"/model/system/ntp", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        flush_ntp_info();
+    }});
+}
+
+function ntp_process()
+{
+    var ntp_addr = $$("#ntp_addr_list").val();
+    if (ntp_addr == null)
+    {
+        alert("请选择要同步的地址！");
+        return;
+    }
+    
+    var data = '{"ntp":"' + ntp_addr + '"}';
+
+    var ret = restful_ajax({url:"/model/system/ntp", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("同步成功!");
+        timer(true);
+        //flush_ntp_info();
+    }});
+}
+
+function ntp_ok_process()
+{
+    var checked = $$("#checkbox").attr("checked");
+
+    var data = '{"status":"' + (checked?"on":"off") + '"}';
+
+    var ret = restful_ajax({url:"/model/system/ntp", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        //alert(errorThrown)
+    }, success:function()
+    {
+        alert("设置成功!");
+        //flush_ntp_info();
+    }});
+}
+
+var hour_spinner;
+var minute_spinner;
+var second_spinner;
+$$(document).ready(function() {
+    $$("#vmxTab").vmxTab();
+    //$$("#datepicker" ).datepicker({dateFormat:"yy-mm-dd"});
+    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:270, height:110});
+    hour_spinner = $$( "#hours" ).spinner({
+      spin: function( event, ui ) {
+        if ( ui.value > 23 ) {
+          $$( this ).spinner( "value", 0 );
+          return false;
+        } else if ( ui.value < 0 ) {
+          $$( this ).spinner( "value", 23 );
+          return false;
+        }
+      }
+    });
+    minute_spinner = $$( "#minutes" ).spinner({
+      spin: function( event, ui ) {
+        if ( ui.value > 59 ) {
+          $$( this ).spinner( "value", 0 );
+          return false;
+        } else if ( ui.value < 0 ) {
+          $$( this ).spinner( "value", 59 );
+          return false;
+        }
+      }
+    });
+    second_spinner = $$( "#seconds" ).spinner({
+      spin: function( event, ui ) {
+        if ( ui.value > 59 ) {
+          $$( this ).spinner( "value", 0 );
+          return false;
+        } else if ( ui.value < 0 ) {
+          $$( this ).spinner( "value", 59 );
+          return false;
+        }
+      }
+    });
+    $$("#checkbox").click(function()
+    {
+        var checked = $$("#checkbox").attr("checked");
+        if (checked)
+        {
+            $$("[rel=ntp]").attr("disabled", false);
+        }else
+        {
+            $$("[rel=ntp]").attr("disabled", true);
+            $$("#ntp_addr_list").val("");
+        }
+
+    });
+    
+    flush_ntp_info();
+    
+    timer(true);
+    setTimeout(timer, 3000);
+});
+</script>
+</head>
+
+<body>
+
+
+
+<div id="vmxTab" class="vmxTab">
+    <div class="vmxTabHd">
+        <ul class="vmxTabNav">
+            <li class="vmxTabList current">日期</li>
+            <li class="vmxTabList">网络时钟同步</li>
+        </ul>
+    </div>
+    <div class="vmxTabBd">
+        <div class="roundBox">
+            <div class="vmxTabContent current">
+                <table width="550" height="180" border="0" align="center" cellpadding="0" cellspacing="0" id="info_table">
+                    <tr>
+                      <td align="left" height="40" colspan="2"><span id="current_time"></span><br /><br /></td>
+                    </tr>
+                    <tr>
+                      <td align="left" width="180">
+                        <fieldset class="date_time">
+                            <legend>日期</legend>
+                            <!-- <input type="text" id="datepicker" size="20" class="ui-widget ui-widget-content ui-corner-all" /> -->
+                            <!-- <div id="datepicker"></div> -->
+                            年: <select id="year" class="ui-widget ui-widget-content ui-corner-all">
+                                </select>  <br /><br />
+                            月: <select id="month" class="ui-widget ui-widget-content ui-corner-all">
+                                </select> <br /><br />
+                            日: <select id="date" class="ui-widget ui-widget-content ui-corner-all">
+                                </select>
+                        </fieldset>
+                      </td>
+                      <td align="left">
+                        <fieldset class="date_time">
+                            <legend>时间</legend>
+                            时:<input name="value" id="hours" size="5" /> <br /><br />
+                            分:<input id="minutes" name="value" size="5" /> <br /><br />
+                            秒:<input id="seconds" name="value" size="5" />
+                        </fieldset>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="left" height="40"><input type="button" value="修改" class="edit" onclick="date_process();" /></td>
+                      <td align="left"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="vmxTabContent">
+                <table width="300" height="100" border="0" align="center" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="left" height="30">
+                        <input id="checkbox" type="checkbox" value="" />开启网络时钟同步
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="left">
+                        <fieldset>
+                            <legend>NTP服务器</legend>
+                            <!-- <input type="text" id="datepicker" size="20" class="ui-widget ui-widget-content ui-corner-all" /> -->
+                            <table width="300" height="100" border="0" align="center" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="right" valign="top">
+                                        <select rel="ntp" id= "ntp_addr_list" size="6" style="width:250px;font-size:13px;font-weight:bold;">
+                                                
+                                        </select>
+                                    </td>
+                                    <td align="left" valign="top" style="padding-left:5px;">
+                                        <input type="button" value="添加" rel="ntp" class="add" onclick="$$( '#dialog').dialog('open' );" /><br />
+                                        <input type="button" value="删除" rel="ntp" class="no" onclick="del_process();" /><br />
+                                        <input type="button" value="同步" rel="ntp" class="load" onclick="ntp_process();" /><br />
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="left" height="40"><input type="button" value="确定" class="yes" onclick="ntp_ok_process();" /></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="dialog" title="添加NTP服务器">
+    <table width="240" height="20" border="0" cellpadding="0" cellspacing="0" id="info_table">
+        <tr>
+          <td align="left" height="20"><input type="text" id="ntp_addr" /><input type="button" class="big" value="添加" onclick="add_process();" /></td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Do not remove the following line, or various programs
+# that require network functionality will fail.
+127.0.0.1	localhost.localdomain	localhost
+::1		localhost6.localdomain6 localhost6
+127.0.0.1   {{HOSTNAME}}.localdomain   {{HOSTNAME}}
+
+127.0.0.1   mmap5
+127.0.0.1 wowzalicense1.wowzamedia.com
+127.0.0.1 wowzalicense2.wowzamedia.com
+127.0.0.1 wowzalicense3.wowzamedia.com
+127.0.0.1 wowzalicense4.wowzamedia.com

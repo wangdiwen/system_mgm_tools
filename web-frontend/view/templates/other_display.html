@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>显示器管理</title>
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<script>
+var screens_has_display = {};
+var screens = new Array();
+var adaptor_type = null; //nvidia-setting
+
+function display_process()
+{
+    var modify_bool = true;
+    for (var i = 0; i < screens.length; i++)
+    {
+
+        var resolution = $$("#resolution_" + screens[i].typeid).val().split('x');
+        var refresh = $$("#refresh_" + screens[i].typeid).val()
+        if (parseInt(resolution[0]) != screens[i].width
+            ||parseInt(resolution[1]) != screens[i].height
+            ||parseInt(refresh) != screens[i].refresh)
+        {
+            var retcode = false
+            var data = "[";
+            data += screens[i].typeid + ","
+            data += resolution[0] + ","
+            data += resolution[1] + ","
+            data += refresh + "]"
+
+            var _ret = restful_ajax({url:"/model/extend/" + adaptor_type + "/setScreenResolution", data:data, type:"POST", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown);
+                retcode = false
+            }, success:function()
+            {
+                retcode = true;
+            }});
+
+            if (retcode)
+            { 
+                screens[i].width = parseInt(resolution[0])
+                screens[i].height = parseInt(resolution[1])
+                screens[i].refresh = parseInt(refresh)
+            }
+            else
+            {
+                modify_bool = false;
+            }
+        }
+    }
+    if (modify_bool)
+        alert("修改成功！");
+}
+
+function update_setting_info()
+{
+    var data = "[]";
+    var _ret = restful_ajax({url:"/model/extend/" + adaptor_type + "/updateSettingInfo", data:data, type:"POST", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+
+    }});
+}
+
+function get_resolution_list(i)
+{
+    var retcode = false
+    var _ret = restful_ajax({url:"/model/extend/" + adaptor_type + "/getScreenResolutionList/" + i, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+
+    if (retcode)
+    {
+        var ret_data = $$.parseJSON(_ret)
+        return ret_data;
+    }
+    return null;
+}
+
+function get_current_resolution(i)
+{
+    var ret = restful_ajax({url:"/model/extend/" + adaptor_type + "/getCurrentResolution/" + i, type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        var ret_data = $$.parseJSON(ret)
+        return ret_data;
+    }
+    return null;
+}
+
+function get_screen_by_index(ret_data, index)
+{
+    for (var i = 0; i < ret_data.length; i++)
+    {
+        if (ret_data[i][0] == index)
+            return ret_data[i]
+    }
+    return null;
+}
+
+$$(document).ready(function() {
+    $$("#vmxTab").vmxTab();
+    
+    var ret = restful_ajax({url:"/model/system/info", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        data = $$.parseJSON(ret)
+        var video_adaptor = data["video_adaptor"]['name'];
+        if (video_adaptor.indexOf("ATI") > 0
+            || video_adaptor.indexOf("AMD") > 0)
+        {
+            adaptor_type = "ati-setting";
+        }else
+        {
+            adaptor_type = "nvidia-setting";
+        }
+    }
+    
+    
+    
+    update_setting_info()
+    
+    var retcode = false
+    var ret = restful_ajax({url:"/model/extend/" + adaptor_type + "/getScreenList", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        $$("#info_table > fieldset").remove();
+        
+        var ret_data = $$.parseJSON(ret)
+        for (var i = 0; i < 8; i++)
+        {
+            if (1)//ret_data[i][2].length > 0
+            {
+                
+                var screen_data = get_screen_by_index(ret_data, i);
+                
+                if (screen_data == null)
+                {
+                    $$("#info_table").append(
+                        '<fieldset>' + 
+                            '<legend>通道' + i + '</legend>' + 
+                            '<label>此通道未接显示器</label>' +
+                        '</fieldset>');
+                    continue;
+                }
+                
+                
+                screens_has_display["typeid"] = screen_data[0]
+                
+                var _ret_data = get_resolution_list(screen_data[0]);
+                if (_ret_data != null)
+                {
+                    //$$("#info_table > fieldset").remove();
+                    $$("#info_table").append(
+                        '<fieldset>' + 
+                            '<legend>通道' + screen_data[0] + '</legend>' + 
+                            '&nbsp;<label>分辨率' + 
+                            '<select id="resolution_' + screen_data[0] + '">' + 
+                            '</select></label> ' + 
+                            '&nbsp;<label>刷新率' + 
+                            '<select id="refresh_' + screen_data[0] + '">' + 
+                            '</select></label>' + 
+                            '&nbsp;<label>显示器型号:</label><label id="display_label_' + screen_data[0] + '"></label>&nbsp;' +
+                           // '<label>接口类型:</label><label id="port_label_' + ret_data[i][0] + '"></label>' +
+                        '</fieldset>');
+
+                    var _ret_data_current = get_current_resolution(screen_data[0]);
+                    
+                    var obj = {};
+                    obj.resolution = _ret_data;
+                    obj.typeid = screen_data[0]
+                    obj.width = _ret_data_current[0]
+                    obj.height = _ret_data_current[1]
+                    obj.refresh = _ret_data_current[2]
+                    screens[screens.length] = obj;
+                    
+                    if (adaptor_type == "nvidia-setting")
+                        $$("#refresh_" + screen_data[0]).append('<option value="0" ' + (_ret_data_current[2]==0?'selected="selected"':'') +'>AUTO</option>');
+                        
+                    for (var j = 0; j < _ret_data.length; j++)
+                    {
+                        var is_cur_resolution = false;
+
+                        if (_ret_data_current[0] == _ret_data[j][0]
+                            &&_ret_data_current[1] ==  _ret_data[j][1])
+                            is_cur_resolution = true;
+
+                        $$("#resolution_" + screen_data[0]).append('<option value="' + _ret_data[j][0] + 'x' + _ret_data[j][1] + '" ' + (is_cur_resolution?'selected="selected"':'') +'>' + _ret_data[j][0] + 'x' + _ret_data[j][1] + '</option>');
+
+                        if (is_cur_resolution)
+                        {
+                            for (var k = 0; k < _ret_data[j][2].length; k++)
+                            {
+                                var is_cur_refresh = false;
+                                if (_ret_data[j][2][k] ==0)
+                                    continue;
+
+                                if (_ret_data_current[2] == _ret_data[j][2][k])
+                                    is_cur_refresh = true;
+
+                                $$("#refresh_" + screen_data[0]).append('<option value="' + _ret_data[j][2][k] + '" ' + (is_cur_refresh?'selected="selected"':'') +'>' + _ret_data[j][2][k] + '</option>');
+                            }
+                        }
+
+                        $$("#resolution_" + screen_data[0]).change(function()
+                        {
+                            //alert(ret_data[i][0]);
+                            var typeid = parseInt($$(this).attr("id").split('_')[1]);
+                            for (var i = 0 ; i < screens.length; i++)
+                            {
+                                if (screens[i].typeid == typeid)
+                                {
+                                    var resol_width = $$("#resolution_" + typeid).val().split('x')[0];
+                                    var resol_height = $$("#resolution_" + typeid).val().split('x')[1];
+
+                                    $$("#refresh_" + typeid + " > option").remove();
+                                    if (adaptor_type == "nvidia-setting")
+                                        $$("#refresh_" + typeid).append('<option value="0" selected="selected">AUTO</option>');
+                                    for (var j = 0; j < screens[i].resolution.length; j++)
+                                    {
+                                        if (screens[i].resolution[j][0] == resol_width
+                                            &&screens[i].resolution[j][1] == resol_height)
+                                        {
+                                            for (var k = 0 ; k < screens[i].resolution[j][2].length; k++)
+                                            {
+                                                if (screens[i].resolution[j][2][k] ==0)
+                                                    continue;
+                                                $$("#refresh_" + typeid).append('<option value="' + screens[i].resolution[j][2][k] + '">' + screens[i].resolution[j][2][k] + '</option>');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    if (adaptor_type == "nvidia-setting")
+                        if (screen_data[2].length > 0)
+                            $$("#display_label_" + screen_data[0]).html(screen_data[2][0]);
+                    
+                    if (adaptor_type == "ati-setting")
+                    {
+                        if (screen_data[1].length > 0)
+                            $$("#display_label_" + screen_data[0]).html(screen_data[1][0]);
+                            
+                            //port_label_
+                    }
+                }
+            }
+                
+        }
+    }
+
+
+
+    
+});
+</script>
+</head>
+
+<body>
+
+
+
+<div id="vmxTab" class="vmxTab">
+    <div class="vmxTabHd">
+        <ul class="vmxTabNav">
+            <li class="vmxTabList current">显示器管理</li>
+        </ul>
+    </div>
+    <div class="vmxTabBd">
+        <div class="roundBox">
+            <div class="vmxTabContent current">
+                <table width="550" height="100" border="0" align="center" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="left" id="info_table">
+                        
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="left" height="40"><input type="button" value="修改" class="edit" onclick="display_process();" /></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

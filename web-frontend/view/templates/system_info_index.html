@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<link href="/view/templates/images/common.css" rel="stylesheet" type="text/css" />
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<title>sytem infomation</title>
+
+<script>
+function append_to_table(table, key, value)
+{
+    $$(table).append("<tr rel=\"info\"><td width=\"130\" align=\"left\">" + key + "</td>" +
+                             "<td align=\"left\">" + value + "</td></tr>");
+}
+function display_info(json)
+{
+    var data = null;
+    if (typeof(json) != "undefined" && json != "")
+        data = $$.parseJSON(json)
+    else
+    {
+        var ret = restful_ajax({url:"/model/system/info", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            retcode = false
+        }, success:function()
+        {
+            retcode = true;
+        }});
+        if (retcode)
+        {
+            data = $$.parseJSON(ret)
+        }
+    }
+    if (data == null)
+    {
+        setTimeout(display_info, parseInt($$("#flush").val()));
+        return;
+    }
+    
+    $$("#info_table > tr[rel=info]").remove();
+    if (typeof data["hostname"] != "undefined")
+    {
+        append_to_table("#info_table", "主机名", " ");
+    }
+    if (typeof data["cpu"] != "undefined")
+    {
+        var value = data["cpu"]['name'];
+        append_to_table("#info_table", "处理器", value);
+        if (typeof data["cpu"]['warning'] != "undefined"
+            && data["cpu"]['warning'] != "")
+        {
+            value = '<div class="warning">此项与生产环境不匹配，生产环境：' + data["cpu"]['warning'] + '</div>'
+            append_to_table("#info_table", "&nbsp;", value);
+        }
+    }
+    
+    if (typeof data["kernel"] != "undefined")
+    {
+        var value = data["kernel"]['name'];
+        append_to_table("#info_table", "内核", value);
+        if (typeof data["kernel"]['warning'] != "undefined"
+            && data["kernel"]['warning'] != "")
+        {
+            value = '<div class="warning">此项与生产环境不匹配，生产环境：' + data["kernel"]['warning'] + '</div>'
+            append_to_table("#info_table", "&nbsp;", value);
+        }
+    }
+    
+    if (typeof data["issue"] != "undefined")
+    {
+        var value = data["issue"]['name'];
+        append_to_table("#info_table", "发行版", value);
+        if (typeof data["issue"]['warning'] != "undefined"
+            && data["issue"]['warning'] != "")
+        {
+            value = '<div class="warning">此项与生产环境不匹配，生产环境：' + data["issue"]['warning'] + '</div>'
+            append_to_table("#info_table", "&nbsp;", value);
+        }
+    }
+    
+    if (typeof data["base_board"] != "undefined")
+    {
+        var value = data["base_board"]['name'];
+        append_to_table("#info_table", "主板", value);
+        if (typeof data["base_board"]['warning'] != "undefined"
+            && data["base_board"]['warning'] != "")
+        {
+            value = '<div class="warning">此项与生产环境不匹配，生产环境：' + data["base_board"]['warning'] + '</div>'
+            append_to_table("#info_table", "&nbsp;", value);
+        }
+    }
+    
+    if (typeof data["video_adaptor"] != "undefined")
+    {
+        var value = data["video_adaptor"]['name'];
+        append_to_table("#info_table", "显卡", value);
+        if (typeof data["video_adaptor"]['warning'] != "undefined"
+            && data["video_adaptor"]['warning'] != "")
+        {
+            value = '<div class="warning">此项与生产环境不匹配，生产环境：' + data["video_adaptor"]['warning'] + '</div>'
+            append_to_table("#info_table", "&nbsp;", value);
+        }
+    }
+    
+    if (typeof data["uptime"] != "undefined")
+    {
+        var value = data["uptime"]["day"] + "天" + data["uptime"]["hour"] + "小时"
+                  + data["uptime"]["minute"] + "分" + data["uptime"]["second"] + "秒 (空闲率)" + data["uptime"]["free_rate"].toFixed(2);
+        append_to_table("#info_table", "运行时间", value);
+    }
+    if (typeof data["workload"] != "undefined")
+    {
+        var value = data["workload"]["lavg_1"] + "(1min)" + data["workload"]["lavg_5"] + "(5min)" + data["workload"]["lavg_15"] + "(15min)";
+        append_to_table("#info_table", "负载", value);
+    }
+    if (typeof data["memory"] != "undefined")
+    {
+        var value = "(总计)" + (parseInt(data["memory"]["memtotal"])/1024/1024).toFixed(2) + "MB (已使用)" + (data["memory"]["memused"]/1024/1024).toFixed(2) + "MB";
+        append_to_table("#info_table", "内存", value);
+    }
+
+    if (typeof data["date"] != "undefined")
+    {
+        var value = data["date"];
+        append_to_table("#info_table", "系统时间", value);
+    }
+    
+    if (typeof data["restful-server"] != "undefined")
+    {
+        var value = data["restful-server"];
+        append_to_table("#info_table", "Restful服务版本", value);
+    }
+    
+    if (typeof data["web-frontend"] != "undefined")
+    {
+        var value = data["web-frontend"];
+        append_to_table("#info_table", "Web管理后端版本", value);
+    }
+    
+    setTimeout(display_info, parseInt($$("#flush").val()));
+}
+
+
+
+$$(document).ready(function() {
+    display_info();
+    setTimeout(display_info, parseInt($$("#flush").val()));
+    
+    var data;
+    var ret = restful_ajax({url:"/model/system/startup-mode", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        data = $$.parseJSON(ret)
+        var map = { "release":"发布模式", "develop": "开发模式"}
+        $$("#current_mode").html(map[data["startup-mode"]]);
+    }
+    
+    
+    $$("#model_dialog" ).dialog({autoOpen: false, modal: true, width:300});
+    
+    $$("#modify").click(function()
+    {
+        var mode_html = $$("#current_mode").html()
+        var map = { "发布模式":"release", "开发模式": "develop"}
+        $$("#mode").val(map[mode_html]);
+        $$("#model_dialog" ).dialog("open");
+        
+    });
+    $$("#modify_submit").click(function()
+    {
+            var data = '{"startup-mode":"' + $$("#mode").val() + '"}';
+            var ret = restful_ajax({url:"/model/system/startup-mode", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                alert(errorThrown)
+            }, success:function()
+            {
+                var del_confirm = confirm('修改成功!是否重启机器?')
+                if (!del_confirm)
+                    window.location.reload()
+                else
+                {
+                    var ret = restful_ajax({url:"/model/system/reboot", type:"PUT", data:"", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+                    {
+                        alert(errorThrown)
+                    }, success:function()
+                    {
+                        alert("重启成功！")
+                    }});
+                }
+                
+            }});
+    });
+    
+});
+</script>
+
+</head>
+
+<body>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
+	<thead>
+        <tr>
+          <th colspan="2" align="left">系统概要</th>
+        </tr>
+	</thead>
+	<tbody id="info_table">
+        <tr>
+          <td align="left">当前启动模式</td>
+          <td align="left">
+              <span id="current_mode"></span>
+              <input id="modify" type="button" value="修改" class="edit" />
+          </td>
+        </tr>
+	</tbody>
+	<tfoot>
+		<tr>
+          <td colspan="2" align="left">刷新间隔<select id="flush">
+            <option value="5000" selected="selected">5秒</option>
+            <option value="4000">4秒</option>
+			<option value="3000">3秒</option>
+            <option value="2000">2秒</option>
+			<option value="1000">1秒</option>
+          </select></td>
+	    </tr>
+	</tfoot>
+</table>
+<div id="model_dialog" title="修改启动模式">
+    <table width="270" height="80" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="left" width="80">当前模式：</td>
+          <td align="left"><select id="mode">
+                <option value="release" selected="selected">发布模式</option>
+                <option value="develop">开发模式</option>
+              </select>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" colspan="2"><input id="modify_submit" type="button" class="yes" value="确定" />
+          </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

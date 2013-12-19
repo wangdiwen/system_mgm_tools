@@ -1,0 +1,537 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Web管理系统</title>
+<!-- <link rel="stylesheet" href="/view/templates/images/common.css"> -->
+<link rel="stylesheet" href="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.css">
+<script src="/view/templates/js/jquery.min.js"></script>
+<script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<script src="/view/templates/js/common.js"></script>
+<style type="text/css">
+* { margin:0; padding:0; list-style:none;}
+html,body { height:100%; overflow:hidden; background:#fff;}
+.head,.main_menu,.main,.foot,#tip {position:absolute;right:0;left:0;}
+.head { height:45px; background:#000000;line-height:30px;font-size:25px;color:#FFFFFF;padding-left:10px;}
+.head image {line-height:50px;}
+.main_menu { width:200px; top:75px; bottom:15px; overflow:auto;}
+.main { left: 220px; top:75px; bottom:15px; overflow:auto;}
+.foot { height:15px; bottom:0px; background:#555555; }
+.main iframe { width:100%; height:100%;}
+#tip { height:25px; top:45px; background-color:#555555;text-align:left;line-height:25px;font-size:12px}
+#tip a {color:#FFFFFF;}
+
+html { *padding:50px 0px 30px 0px;}
+.head,.main_menu,.foot,#tip {*position:relative;*top:0; *right:0; *bottom:0; *left:0;}
+.main {*position:relative;*top:0px; *right:0; *bottom:0; *left:20px;}
+.head { *height:45px; *margin-top:-50px;}
+#tip { *height:25px;}
+.main_menu { *height:100%; *float:left; *width:200px;}
+.main { *height:100%;}
+.foot { *height:15px;}
+
+#tip .notice {
+    background:#555555 url(/view/templates/images/icon_24_24/button-check_green.png) no-repeat left;
+    background-position-x : 5px;
+    background-position-y : 2px;
+    color:#CCDDCC;
+}
+
+#tip .warning {
+    background:#555555 url(/view/templates/images/icon_24_24/exclamation-circle_yellow.png) no-repeat left;
+    background-position-x : 5px;
+    background-position-y : 2px;
+    color:#EEDD00;
+}
+
+#tip .error {
+    background:#555555 url(/view/templates/images/icon_24_24/exclamation-circle_red.png) no-repeat left;
+    background-position-x : 5px;
+    background-position-y : 2px;
+    color:#EE0000;
+}
+
+a:link {
+	text-decoration: none;
+}
+a:visited {
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: none;
+}
+a:active {
+	text-decoration: none;
+}
+
+.accordion {
+	margin-left:3px;
+	width:190;
+	border: 1px solid #CCCCCC;
+	padding:2px;
+}
+.accordion div.title{
+	height:26px;
+	font-size:15px;
+	line-height:26px;
+	padding:2px 10px 2px 10px;
+	background-image: url(view/templates/images/wbg.gif);
+	background-repeat: repeat-x;
+}
+
+.accordion div.body { 
+}
+
+.accordion li { 
+	height:24px;
+    font-size:14px;
+    line-height:24px;
+    padding:3px 0px 3px 30px;
+}
+.accordion li.home {
+    background: url(/view/templates/images/icon_24_24/home_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.process {
+    background: url(/view/templates/images/icon_24_24/wallet_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.clock {
+    background: url(/view/templates/images/icon_24_24/alarm-clock_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.env {
+    background: url(/view/templates/images/icon_24_24/weather-sun_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.eth {
+    background: url(/view/templates/images/icon_24_24/hard-drive-network_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.dns {
+    background: url(/view/templates/images/icon_24_24/computer_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.hostname {
+    background: url(/view/templates/images/icon_24_24/user_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.route {
+    background: url(/view/templates/images/icon_24_24/wireless-router_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.firewall {
+    background: url(/view/templates/images/icon_24_24/wall_blue.png) no-repeat left;
+    background-position-y : 3px;
+    background-position-x : 5px;
+}
+
+.accordion li.tools {
+    background: url(/view/templates/images/icon_24_24/gears_blue.png) no-repeat left;
+    background-position-y : 5px;
+    background-position-x : 5px;
+}
+
+.accordion li.upload {
+    background: url(/view/templates/images/icon_24_24/hard-drive-upload_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.mount {
+    background: url(/view/templates/images/icon_24_24/usb-stick_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.service {
+    background: url(/view/templates/images/icon_24_24/documents_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.startup {
+    background: url(/view/templates/images/icon_24_24/chart-area-up_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+
+.accordion li.hard_drive {
+    background: url(/view/templates/images/icon_24_24/hard-drive_blue.png) no-repeat left;
+    background-position-y : 1px;
+    background-position-x : 5px;
+}
+
+.accordion li.raid {
+    background: url(/view/templates/images/icon_24_24/site-map_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.log {
+    background: url(/view/templates/images/icon_24_24/feed-alt_blue.png) no-repeat left;
+    background-position-y : 5px;
+    background-position-x : 5px;
+}
+
+.accordion li.download {
+    background: url(/view/templates/images/icon_24_24/hard-drive-download_blue.png) no-repeat left;
+    background-position-y : 5px;
+    background-position-x : 5px;
+}
+
+.accordion li.license {
+    background: url(/view/templates/images/icon_24_24/briefcase_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.display {
+    background: url(/view/templates/images/icon_24_24/laptop_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+.accordion li.terminal {
+    background: url(/view/templates/images/icon_24_24/wrench_blue.png) no-repeat left;
+    background-position-y : 4px;
+    background-position-x : 5px;
+}
+
+#tip div{
+    line-height:25px;
+    padding-left:25px;
+}
+
+#tip div#tip_tip {
+    padding-left:30px;
+}
+
+#tip div.shutdown {
+    background: url(/view/templates/images/icon_24_24/button-power_red.png) no-repeat left;
+    background-position-y : 4px;
+}
+
+#tip div.logout {
+    background: url(/view/templates/images/icon_24_24/button-remove_yellow.png) no-repeat left;
+    background-position-y : 4px;
+}
+
+.accordion li a { 
+	color:#444444;
+}
+.accordion li:hover {
+	background-color: #DFEFFF;	
+    cursor:pointer;
+}
+
+input[type="button"].big {
+    height:30px;
+    border: 1px solid #CCCCCC;
+    line-height:30px;
+    font-size:13px;
+    background-color:#ece9d8;
+    padding-left: 25px;
+    padding-right: 25px;
+}
+input[type="button"].big:hover {
+    background-color:#eeeeee;
+    cursor:pointer;
+}
+
+
+</style>
+<script>
+$$(function() {
+    $$(".accordion li").click(function()
+    {
+        //$$("a", this).click();
+        $$("#body").attr("src", $$("a", this)[0].href);
+        //alert($$("a", this).html());
+    });
+    /*$$("#accordion" ).accordion({
+        heightStyle: "content"
+    });
+    $$("#sys_menu").menu();
+    $$("#network_menu").menu();
+    $$("#service_menu").menu();
+    $$("#storage_menu").menu();*/
+});
+
+function logout()
+{
+    /*var ret = restful_ajax({url:"/view/login", type:"POST", data:"", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        //alert("退出成功！")
+        window.location.href = "/view/login"
+    }});*/
+    deleteCookie("user_name");
+    deleteCookie("user_passwd");
+    deleteCookie("login_random");
+    window.location.href = "/view/login"
+}
+
+function shutdown()
+{
+    var ret = restful_ajax({url:"/model/system/shutdown", type:"PUT", data:"", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("关机成功！")
+    }});
+}
+
+function reboot()
+{
+    var ret = restful_ajax({url:"/model/system/reboot", type:"PUT", data:"", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("重启成功！")
+    }});
+}
+
+function standby()
+{
+    var ret = restful_ajax({url:"/view/login", type:"PUT", data:"", async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+    }, success:function()
+    {
+        alert("待机成功！")
+    }});
+}
+
+
+function shutdown_dialog_open()
+{
+    $$("#shutdown_dialog" ).dialog("open");
+}
+
+function timer(init)
+{
+    var ret = restful_ajax({url:"/view/login/login_random", type:"GET", data:"", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+        window.location.href = "/view/login"
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        if (ret != "")
+        {
+            var ret_data = $$.parseJSON(ret)
+            var cookie = getCookie("login_random");
+            if (ret_data != parseInt(cookie))               
+            {
+                alert("此账户在其它地方登录！！！");
+                logout();
+            }
+        }
+    }
+    setTimeout(timer, 5000);
+}
+$$(document).ready(function() {
+    $$("#body").attr("src", "/view/index");
+    
+    /*var ret = restful_ajax({url:"/view/login/login_src_url", type:"GET", data:"", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+        window.location.href = "/view/login"
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        if (ret != "")
+        {
+            var ret_data = $$.parseJSON(ret)
+            alert(window.location.href+"view/login");
+            //if (ret_data != "/view/login")               
+            //{
+            //    logout();
+            //}
+        }
+    }*/
+
+
+
+    var ret = restful_ajax({url:"/view/system/run-mode", type:"GET", data:"", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        alert(errorThrown)
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        var ret_data = $$.parseJSON(ret)
+        if (!ret_data)
+        {
+            $$("#tip_tip").removeClass("notice");
+            $$("#tip_tip").addClass("warning");
+            $$("#tip_tip").html("请注意：当前系统运行在开发模式下！！！");
+        }
+    }
+    
+    ret = restful_ajax({url:"/model/system/product", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false
+    }, success:function()
+    {
+        retcode = true;
+    }});
+    if (retcode)
+    {
+        var ret_data = ret
+
+        if (ret_data != "tvwall")
+        {
+            $$("[rel=tvwall]").hide();
+        }
+    }
+
+    $$("#shutdown_dialog" ).dialog({autoOpen: false, modal: true, width:260});
+    setTimeout(timer, 5000);
+
+    if (getCookie("user_name") != "admin")
+    {
+        $$("[rel=admin]").hide();
+    }
+
+    $$(window).unload(function()
+    {
+        //deleteCookie("user_name");
+        //deleteCookie("user_passwd");
+        //deleteCookie("login_random");
+    });
+    
+    var url = window.location.href;
+    
+    url = url.substring(7, url.length);
+    if (url.indexOf(':'))
+    {
+        url = url.substring(0, url.indexOf(':'));
+    }else
+    {
+        url = url.substring(0, url.indexOf('/'));
+    }
+
+    $$(".terminal > a").attr("href", "http://" + url + ":8022");
+    
+});
+</script>
+</head>
+<body>
+<div class="head"><img src="/view/templates/images/logo.png" align="absmiddle" />超然基础系统WEB管理</div>
+<div id="tip">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="left"><div id="tip_tip" class="notice">当前系统运行在发布模式下！！！</div></td>
+	  <td align="left" width="60"><div class="shutdown"><a href="javascript:shutdown_dialog_open();">关机</a></div></td>
+      <td align="left" width="60"><div class="logout"><a href="javascript:logout();">退出</a></div></td>
+    </tr>
+  </table>
+</div>
+
+<div class="main_menu">
+  <div class="accordion">
+    <div class="title">系统管理</div>
+	<div class="body">
+        <ul>
+            <li class="home"><a href="/view/index" target="body">系统概要</a></li>
+            <li rel="admin" class="process"><a href="/view/system/process" target="body">进程管理</a></li>
+            <!-- <li><a href="/view/system/shared-memory" target="body">共享内存</a></li> -->
+            <li class="clock"><a href="/view/system/datetime" target="body">时间管理</a></li>
+            <li class="env"><a href="/view/system/env" target="body">环境变量</a></li>
+        </ul>
+	</div>
+    <div class="title">网络管理</div>
+    <div class="body">
+        <ul>
+            <li class="eth"><a href="/view/network/adaptors" target="body">适配器</a></li>
+            <li class="dns"><a href="/view/network/nameserver" target="body">DNS</a></li>
+            <li class="hostname"><a href="/view/network/hostname" target="body">主机名</a></li>
+            <li class="route"><a href="/view/network/route" target="body">路由</a></li>
+            <li rel="admin" class="firewall"><a href="/view/network/iptables" target="body">防火墙</a></li>
+            <li rel="admin" class="tools"><a href="/view/network/tools" target="body">网络工具</a></li>
+        </ul>
+    </div>
+    <div class="title">软件与服务</div>
+    <div class="body">
+        <ul>
+            <li class="upload"><a href="/view/software/upload" target="body">软件包管理</a></li>
+            <li rel="admin" class="service"><a href="/view/software/service" target="body">系统服务管理</a></li>
+            <li rel="admin" class="startup"><a href="/view/software/startup" target="body">开机启动项</a></li>
+        </ul>
+    </div>
+    <div class="title">存储管理</div>
+    <div class="body">
+        <ul>
+            <li rel="admin" class="mount"><a href="/view/storage/mount" target="body">设备管理</a></li>
+            <li class="hard_drive"><a href="/view/storage/disk" target="body">磁盘信息</a></li>
+            <li class="raid"><a href="/view/storage/raid" target="body">阵列信息</a></li>
+        </ul>
+    </div>
+    <div class="title">日志与备份</div>
+    <div class="body">
+        <ul>
+            <li class="log"><a href="/view/other/log" target="body">查看日志</a></li>
+            <li class="download"><a href="/view/other/backup" target="body">数据备份</a></li>
+            <li class="license"><a href="/view/other/license" target="body">授权</a></li>
+        </ul>
+    </div>
+    <div rel="tvwall" class="title">其它</div>
+    <div rel="tvwall" class="body">
+        <ul>
+            <li class="display"><a href="/view/other/display" target="body">显示</a></li>
+            <li class="terminal"><a href="" target="body">控制台</a></li>
+        </ul>
+    </div>
+  </div>
+</div>
+<div class="main">
+    <iframe src="" id="body" name="body" marginwidth="0" marginheight="0" align="left" scrolling="auto" frameborder="0"></iframe>
+</div>
+<div class="foot"></div>
+
+<div id="shutdown_dialog" title="关机">
+    <table width="220" height="140" border="0" cellpadding="0" cellspacing="0">
+        <tr style="font-size:13px;">
+          <!--<td align="center"><a href="javascript:standby();"><img src="/view/templates/images/information_yellow.png" border="0" /><br />待机</a></td>-->
+          <td align="center"><a href="javascript:shutdown();"><img src="/view/templates/images/button-power_red.png" border="0" /><br />关机</a></td>
+          <td align="center"><a href="javascript:reboot();"><img src="/view/templates/images/button-synchronize_blue.png" border="0" /><br />重启</a></td>
+        </tr>
+        <tr>
+          <td align="right" colspan="2" height="30"><input id="del_submit" type="button" class="big" value="取消" onclick="$$('#shutdown_dialog' ).dialog('close');" /></td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
