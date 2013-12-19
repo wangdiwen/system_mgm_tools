@@ -1,0 +1,13 @@
+【项目说明】
+    mgmtool 是基础系统 Web 管理工具项目，包含了 restful-server 和 web-frontend 2 个软件套件；
+    restful-server 作为新系统后端服务，提供各种系统管理 API 给上层 App 使用；
+    web-frontend 作为前端 Web，提供 Web 方式的管理、配置功能。
+
+【开发】
+    Author  ：王地文
+    By      ：3 部系统组
+
+Welcome to search our project, and improve mgmtools together.
+
+By Steven Wang
+2013-12-19
