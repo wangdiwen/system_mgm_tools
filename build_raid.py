@@ -349,7 +349,7 @@ elif raid_type == '5':
 
 # formating the raid device
 print 'formating the raid device ...'
-status = shell_cmd('mkfs.ext3 /dev/md0 &', 1)
+status = shell_cmd('mkfs.ext3 /dev/md0 &', True, 1)
 if status == 0:
     log('format raid ok')
 
