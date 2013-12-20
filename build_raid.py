@@ -262,7 +262,8 @@ if sys_disk:
         log(stderr.strip())
 
     # check disk volume
-    disk_volume = '%dG' % check_disk_volume(sys_disk)
+    invalid_vol = check_disk_volume(sys_disk)
+    disk_volume = '%dG' % invalid_vol
 
     agree = get_teminal_input('Do you want to clear partition info ? [ y | n ]', ['y', 'n'], 'y')
     if agree == 'n':
@@ -357,9 +358,21 @@ elif raid_type == '5':
 
 # formating the raid device
 print 'formating the raid device ...'
-status = shell_cmd('mkfs.ext3 /dev/md0 &', True, 1)
+print 'Checking Xfs tools ...'
+status = shell_cmd('which mkfs.xfs', True, 1)
+if status != 0:  # not install tools
+    status, stdout, stderr = shell_cmd('echo -e "y\n" | yum install xfsprogs kmod-xfs')
+    if stdout or stderr:
+        print stdout
+        print stderr
+
+print 'RAID format to Xfs file system ...'
+status = shell_cmd('mkfs.xfs /dev/md0 &', True, 1)
 if status == 0:
-    log('format raid ok')
+    log('congratulations, raid is working ok ^_^')
+else:
+    warning('oh, maybe something was wrong ...')
+    warning('You can call wangdiwen to solve problem, bye')
 
 
 print ''
