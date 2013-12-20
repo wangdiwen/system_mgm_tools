@@ -402,6 +402,12 @@ def active_new_disk(dev_name):  # like 'disk_1'
     # print 'tips: lastest faulty disk name is => ' + RaidExt.faulty_disk_name
     # print 'tips: active disk name is => ' + dev_name
 
+    # checking cur raid disk volume, just '500' or '1000' or '2000'
+    invalid_vol = check_new_disk_vol(dev_name)  # unit is 'G'
+    if invalid_vol == 0:   # new disk is lower
+        raise RestfulError('580 Error: New disk volume is too lower, cannot support')
+        return False
+
     # 1, clear old partition info
     clear_partion_cmd = 'parted -s /dev/' + dev_name + ' mklabel msdos'
     print clear_partion_cmd
@@ -409,14 +415,14 @@ def active_new_disk(dev_name):  # like 'disk_1'
     if status == 0:
         time.sleep(1)
         # 2, part new partition again
-        disk_volume = '500M'
+        disk_volume = '%dG' % invalid_vol  # 500G or 1000G
         new_part_cmd = 'parted -s /dev/'+ dev_name +' mkpart primary 0 ' + disk_volume
         print new_part_cmd
         status, stdout, stderr = invoke_shell(new_part_cmd)
         if status == 0:
             time.sleep(1)
             # 3, format the new partition
-            for_cmd = 'mkfs.ext3 /dev/' + dev_name + '1 &'
+            for_cmd = 'mkfs.xfs /dev/' + dev_name + '1 &'
             status, stdout, stderr = invoke_shell(for_cmd)
             time.sleep(1)
             if status == 0:
@@ -508,7 +514,7 @@ def add_spare_disk(dev_name):
         if status == 0:
             time.sleep(1)
             # 3, format the new partition
-            for_cmd = 'mkfs.ext3 /dev/' + dev_name + '1'
+            for_cmd = 'mkfs.xfs /dev/' + dev_name + '1'
             status, stdout, stderr = invoke_shell(for_cmd)
             time.sleep(1)
             if status == 0:

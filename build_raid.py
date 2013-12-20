@@ -261,6 +261,14 @@ if sys_disk:
     if stderr:
         log(stderr.strip())
 
+    print 'Checking Xfs tools ...'
+    status = shell_cmd('which mkfs.xfs', True, 1)
+    if status != 0:  # not install tools
+        status, stdout, stderr = shell_cmd('echo -e "y\n" | yum install xfsprogs kmod-xfs')
+        if stdout or stderr:
+            print stdout
+            print stderr
+
     # check disk volume
     invalid_vol = check_disk_volume(sys_disk)
     disk_volume = '%dG' % invalid_vol
@@ -303,7 +311,7 @@ if sys_disk:
         time.sleep(2)
         for item in sys_disk:
             print 'formating the disk ' + item + '1 ...'
-            format_disk_cmd = 'mkfs.ext3 /dev/' + item + '1 &'
+            format_disk_cmd = 'mkfs.xfs /dev/' + item + '1 &'
             log(format_disk_cmd)
             status, stdout, stderr = shell_cmd(format_disk_cmd)
             if status == 0:
@@ -357,15 +365,6 @@ elif raid_type == '5':
         error('building error')
 
 # formating the raid device
-print 'formating the raid device ...'
-print 'Checking Xfs tools ...'
-status = shell_cmd('which mkfs.xfs', True, 1)
-if status != 0:  # not install tools
-    status, stdout, stderr = shell_cmd('echo -e "y\n" | yum install xfsprogs kmod-xfs')
-    if stdout or stderr:
-        print stdout
-        print stderr
-
 print 'RAID format to Xfs file system ...'
 status = shell_cmd('mkfs.xfs /dev/md0 &', True, 1)
 if status == 0:
