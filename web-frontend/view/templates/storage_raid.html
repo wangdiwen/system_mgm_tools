@@ -410,6 +410,14 @@ function new_add_device(num) {
             return;
         }
 
+        // checking is alarming or not
+        var is_alarm = is_alarming();
+        if (is_alarm) {
+            alert('当前处于警报状态，不可以移除设备！！！');
+            checking_result(false);
+            return;
+        }
+
         // alert('【提醒】：点击 “确认” 后，请不要做其他操作，耐心等待结果返回 ！！！');
         var ret_code = false;
         var ret_info = restful_ajax({  url: "/model/storage/raid/" + disk_name,
