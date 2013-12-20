@@ -52,7 +52,9 @@ def get_meta_data():
     return {}
 
 
-def get_teminal_input(tips = 'Pls input', options = ['y', 'n', 'yes', 'no']):
+def get_teminal_input(tips = 'Pls input', options = ['y', 'n', 'yes', 'no'], auto_answer = 'y'):
+    if auto_answer in options:
+        return auto_answer
     data = ''
     while True:
         data = raw_input(tips + ': ')
@@ -188,6 +190,19 @@ def init_raid_device(raid_type = '5', raid_name = 'md0', disk_list = []):
         error('exit !!!')
         quit(1)
     return False
+
+def check_disk_volume(sys_disk_list):
+    disk_vol = '500G'
+    for disk in sys_disk_list:  # disk like: disk_1/disk_2
+        cmd = 'parted -s /dev/disk_1 print | grep "^Disk" | awk \'{ print $3 }\''
+        sta, out, err = shell_cmd(cmd)
+        if sta == 0 and out:
+            disk_vol = out.strip()
+            disk_vol = disk_vol[0:-1]
+            log(disk_vol)
+            if not disk_vol in ['500G', '2T']:
+                error('invalid disk volume, not 500G or 2T, quit ...')
+    return disk_vol
 ###############################################################################
 ############################ Main Process #####################################
 print 'Checking user ...'
@@ -210,6 +225,7 @@ else:
 ###############################################################################
 
 print 'Checking system available disk ...'
+disk_volume = '500G'  # default vol
 sys_disk = check_ava_disk()
 if sys_disk:
     log('System available disk are: [' + ' '.join(sys_disk) + ']')
@@ -232,13 +248,17 @@ if sys_disk:
     if stderr:
         log(stderr.strip())
 
+    # check disk volume
+    disk_volume = check_disk_volume(sys_disk)
 
-    agree = get_teminal_input('Do you want to clear partition info ? [ y | n ]', ['y', 'n'])
+    agree = get_teminal_input('Do you want to clear partition info ? [ y | n ]', ['y', 'n'], 'y')
     if agree == 'n':
         quit(0, 'bye')
     elif agree == 'y':
         log('Prepareing to clear partition info, wait some seconds ...')
         time.sleep(2)
+        # quit(1, 'test ...')
+
         for item in sys_disk:
             print 'clear partition info disk : ' + item + ' ...'
             print 'start time :' + time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
@@ -255,7 +275,7 @@ if sys_disk:
 
         log('Prepareing to partition the disk, wait some seconds ...')
         time.sleep(2)
-        disk_volume = '500M'                        # defined first partition volume
+        # disk_volume = '500M'                        # defined first partition volume
         for item in sys_disk:
             print 'parting the disk ' + item + ' ...'
             status, stdout, stderr = shell_cmd('parted -s /dev/'+ item +' mkpart primary 0 ' + disk_volume)
@@ -301,13 +321,13 @@ else:
 
 ###############################################################################
 
-agree = get_teminal_input('Do you want them join in RAID ? [ y | n ]', ['y', 'n'])
+agree = get_teminal_input('Do you want them join in RAID ? [ y | n ]', ['y', 'n'], 'y')
 if agree == 'n':
     quit(0, 'bye')
 elif agree == 'y':
     log('Now, Prepareing to build RAID device, Pls wait ...')
 
-raid_type = get_teminal_input('Now, choose raid type ? [ 0 | 1 | 5 ]', ['0','1', '5'])
+raid_type = get_teminal_input('Now, choose raid type ? [ 0 | 1 | 5 ]', ['0','1', '5'], '5')
 if raid_type in ['0', '1']:
     warning('Oh, raid0 and raid1 type, not support, exit ...')
 

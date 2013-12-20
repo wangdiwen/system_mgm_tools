@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# chkconfig: 35 90 90
+# description: Starts and stops the web-frontend server. 
+#
+
+# Source function library.
+if [ -f /etc/init.d/functions ] ; then
+  . /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+  . /etc/rc.d/init.d/functions
+else
+  exit 1
+fi
+
+# Avoid using root's TMPDIR
+unset TMPDIR
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 1
+
+RETVAL=0
+[ -x /usr/local/web-frontend/web-frontend.py ] || exit 2
+
+start() {
+        KIND="web-frontend"
+	echo -n $"Starting $KIND services: "
+	cd /usr/local/web-frontend
+	daemon /usr/local/web-frontend/web-frontend.py 8089 >/dev/null 2>&1 &
+	RETVAL=$?
+	echo
+	return $RETVAL
+}	
+
+stop() {
+        KIND="web-frontend"
+	echo -n $"Shutting down $KIND services: "
+	killproc /usr/local/web-frontend/web-frontend.py
+	RETVAL=$?
+	echo
+	return $RETVAL
+}	
+
+restart() {
+	stop
+	start
+}	
+
+rhstatus() {
+	status /usr/local/web-frontend/web-frontend.py
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ] ; then
+		return $RETVAL
+	fi
+}	
+
+
+# Allow status as non-root.
+if [ "$1" = status ]; then
+       rhstatus
+       exit $?
+fi
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart)
+  	restart
+	;;
+  status)
+  	rhstatus
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart|status}"
+	exit 2
+esac
+
+exit $?
