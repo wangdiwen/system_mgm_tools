@@ -209,7 +209,12 @@ def check_disk_volume(sys_disk_list):  # return number: 500, 1000 ...
         error('Checking system disk, find one disk volume < 500G, cannot builded raid, quit ...')
     return disk_vol
 ###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
 ############################ Main Process #####################################
+
 print 'Checking user ...'
 is_root = check_user()
 if not is_root:
@@ -234,6 +239,9 @@ disk_volume = '500G'  # default vol
 sys_disk = check_ava_disk()
 if sys_disk:
     log('System available disk are: [' + ' '.join(sys_disk) + ']')
+
+    if len(sys_disk) < 3:
+        error('RAID must give 3 disks to builded, quit !')
 
     print 'Stop mdadm device ...'
     status, stdout, stderr = shell_cmd('mdadm -Ss')
