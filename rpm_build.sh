@@ -126,6 +126,9 @@ function build_rpm_pkg() {
 ###############################################################################
 
 [ "$#" -ne "2" ] && { error 'prams error !'; usage; exit 1; }
+user=`whoami`
+tips "Welcome ... $user"
+[ "$user" != 'root' ] && { warning 'permission deny, only <root> can do this !'; exit 1; }
 
 while [[ -n "$1" ]]; do
     #statements
