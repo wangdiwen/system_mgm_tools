@@ -311,7 +311,7 @@ if sys_disk:
         time.sleep(2)
         for item in sys_disk:
             print 'formating the disk ' + item + '1 ...'
-            format_disk_cmd = 'mkfs.xfs /dev/' + item + '1 &'
+            format_disk_cmd = 'mkfs.xfs -f /dev/' + item + '1 &'
             log(format_disk_cmd)
             status, stdout, stderr = shell_cmd(format_disk_cmd)
             if status == 0:
@@ -366,7 +366,7 @@ elif raid_type == '5':
 
 # formating the raid device
 print 'RAID format to Xfs file system ...'
-status = shell_cmd('mkfs.xfs /dev/md0 &', True, 1)
+status = shell_cmd('mkfs.xfs -f /dev/md0 &', True, 1)
 if status == 0:
     log('congratulations, raid is working ok ^_^')
 else:

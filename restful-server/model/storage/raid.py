@@ -422,7 +422,7 @@ def active_new_disk(dev_name):  # like 'disk_1'
         if status == 0:
             time.sleep(1)
             # 3, format the new partition
-            for_cmd = 'mkfs.xfs /dev/' + dev_name + '1 &'
+            for_cmd = 'mkfs.xfs -f /dev/' + dev_name + '1 &'
             status, stdout, stderr = invoke_shell(for_cmd)
             time.sleep(1)
             if status == 0:
@@ -514,7 +514,7 @@ def add_spare_disk(dev_name):
         if status == 0:
             time.sleep(1)
             # 3, format the new partition
-            for_cmd = 'mkfs.xfs /dev/' + dev_name + '1'
+            for_cmd = 'mkfs.xfs -f /dev/' + dev_name + '1'
             status, stdout, stderr = invoke_shell(for_cmd)
             time.sleep(1)
             if status == 0:
