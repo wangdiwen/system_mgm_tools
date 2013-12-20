@@ -347,5 +347,12 @@ elif raid_type == '5':
     else:
         error('building error')
 
+# formating the raid device
+print 'formating the raid device ...'
+status = shell_cmd('mkfs.ext3 /dev/md0 &', 1)
+if status == 0:
+    log('format raid ok')
+
+
 print ''
 print '\t################### Auto Building RAID Machine ###################\n'
