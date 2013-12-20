@@ -463,6 +463,23 @@ def active_new_disk(dev_name):  # like 'disk_1'
 
     return False
 
+def check_new_disk_vol(dev_name):
+    raid_vol = '500'
+    cur_vol = '500'  # default minor vol
+    status, stdout, stderr = invoke_shell('parted -s /dev/disk_11 print | grep "^[ 0-9]" | awk \'{ print $4 }\'')
+    if status == 0 and stdout:
+        cur_vol = stdout.strip()
+        cur_vol = cur_vol[0:-2]
+    status, stdout, stderr = invoke_shell('parted -s /dev/' + dev_name + ' print | grep ^Disk | awk \'{ print $3 }\'')
+    if status == 0 and stdout:
+        raid_vol = stdout.strip()
+        raid_vol = raid_vol[0:-2]
+    diff = int(cur_vol) - int(raid_vol)
+    if diff >= 0:
+        return raid_vol
+    else:
+        return 0
+
 def add_spare_disk(dev_name):
     available_disk = available_system_disk()
     # print 'available_disk ...'
@@ -475,28 +492,25 @@ def add_spare_disk(dev_name):
         raise RestfulError('580 Error: Raid has not started')
         return False
 
+    # checking cur raid disk volume, just '500' or '1000' or '2000'
+    invalid_vol = check_new_disk_vol(dev_name)  # unit is 'G'
+    if invalid_vol == 0:   # new disk is lower
+        raise RestfulError('580 Error: New disk volume is too lower, cannot support')
+        return False
+
     # 1, clear old partition info
     status, stdout, stderr = invoke_shell('parted -s /dev/' + dev_name + ' mklabel msdos')
     if status == 0:
         time.sleep(1)
         # 2, part new partition again
-        disk_volume = '500M'
+        disk_volume = '%dG' % invalid_vol  # 500G or 1000G
         status, stdout, stderr = invoke_shell('parted -s /dev/'+ dev_name +' mkpart primary 0 ' + disk_volume)
         if status == 0:
-            time.sleep(2)
+            time.sleep(1)
             # 3, format the new partition
             for_cmd = 'mkfs.ext3 /dev/' + dev_name + '1'
             status, stdout, stderr = invoke_shell(for_cmd)
             time.sleep(1)
-            # print for_cmd
-            # if stdout:
-            #     print stdout.strip()
-            # if stderr:
-            #     print stderr.strip()
-            # if status == 0:
-            #     print 'format new partition success'
-            # return True
-
             if status == 0:
                 print 'format new partition success'
             else:
@@ -511,8 +525,6 @@ def add_spare_disk(dev_name):
     raid_meta = meta['raid']
 
     shell = 'mdadm -G /dev/md0 -a -n %d %s' % (raid_meta['count'] + 1, '/dev/' + dev_name + '1')
-    # print 'add new disk ...'
-    # print shell
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
         raid_meta['count'] = raid_meta['count'] + 1

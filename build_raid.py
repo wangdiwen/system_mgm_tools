@@ -191,17 +191,22 @@ def init_raid_device(raid_type = '5', raid_name = 'md0', disk_list = []):
         quit(1)
     return False
 
-def check_disk_volume(sys_disk_list):
-    disk_vol = '500G'
+def check_disk_volume(sys_disk_list):  # return number: 500, 1000 ...
+    disk_vol = '500'
+    vol_list = []
     for disk in sys_disk_list:  # disk like: disk_1/disk_2
-        cmd = 'parted -s /dev/disk_1 print | grep "^Disk" | awk \'{ print $3 }\''
+        cmd = 'parted -s /dev/'+ disk +' print | grep "^Disk" | awk \'{ print $3 }\''
         sta, out, err = shell_cmd(cmd)
         if sta == 0 and out:
             disk_vol = out.strip()
-            disk_vol = disk_vol[0:-1]
-            log(disk_vol)
-            if not disk_vol in ['500G', '2T']:
-                error('invalid disk volume, not 500G or 2T, quit ...')
+            disk_vol = disk_vol[0:-2]
+            log(disk + ' ==> ' + disk_vol)
+            vol_list.append(int(disk_vol))
+    # get the minor invalid volume
+    vol_list.sort()
+    disk_vol = vol_list[0]
+    if disk_vol < 500:
+        error('Checking system disk, find one disk volume < 500G, cannot builded raid, quit ...')
     return disk_vol
 ###############################################################################
 ############################ Main Process #####################################
@@ -249,7 +254,7 @@ if sys_disk:
         log(stderr.strip())
 
     # check disk volume
-    disk_volume = check_disk_volume(sys_disk)
+    disk_volume = '%dG' % check_disk_volume(sys_disk)
 
     agree = get_teminal_input('Do you want to clear partition info ? [ y | n ]', ['y', 'n'], 'y')
     if agree == 'n':
