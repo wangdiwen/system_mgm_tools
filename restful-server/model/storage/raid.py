@@ -328,18 +328,18 @@ def remove_faulty_dev(dev_name):  # disk_1
 
     dev_name = dev_name + '1'  # revise the partition disk like: disk_11
 
+    # checking cur raid status, if status is recovering, not add new disk to raid
+    raid_status = raid_base_info()
+    cur_status = raid_status['state']
+    if re.compile('.*recovering.*').match(cur_status):
+        raise RestfulError('580 Warnning: Raid is rebuilding, cannot force remove disk')
+        return False
+
     faulty_dev_list = []
     raid_status_info = status_info()  # like 'disk_1' => 'F/A/S'
     for key in raid_status_info.keys():
         if raid_status_info[key] == 'F':
             faulty_dev_list.append(key + '1')
-
-    # print 'faulty disk ...'
-    # print faulty_dev_list
-
-    # if not dev_name in faulty_dev_list:
-    #     raise RestfulError('580 Error: this disk is not faulty')
-    #     return False
 
     # remove the faulty disk
     # first, set the disk faulty
@@ -390,17 +390,6 @@ def active_new_disk(dev_name):  # like 'disk_1'
     is_started = has_raid_started()
     if not is_started:
         raise RestfulError('580 Error: Raid has not started')
-
-    # 0, check the faulty disk is right or not
-    # if not RaidExt.faulty_disk_name:
-    #     raise RestfulError('580 Error: you not remove any faulty disk')
-    # if RaidExt.faulty_disk_name != dev_name:
-    #     raise RestfulError('580 Error: input disk is not the lastest faulty disk ' + RaidExt.faulty_disk_name)
-    #     return False
-
-    # 1, format the new disk
-    # print 'tips: lastest faulty disk name is => ' + RaidExt.faulty_disk_name
-    # print 'tips: active disk name is => ' + dev_name
 
     # checking cur raid disk volume, just '500' or '1000' or '2000'
     invalid_vol = check_new_disk_vol(dev_name)  # unit is 'G'
@@ -472,7 +461,22 @@ def active_new_disk(dev_name):  # like 'disk_1'
 def check_new_disk_vol(dev_name):
     raid_vol = '500'
     cur_vol = '500'  # default minor vol
-    status, stdout, stderr = invoke_shell('parted -s /dev/disk_11 print | grep "^[ 0-9]" | awk \'{ print $4 }\'')
+
+    remove_disk_name = RaidExt.faulty_disk_name  # like: disk_1
+    child_disk_name = remove_disk_name + '1'  # like: disk_11
+    # get cur raid conf
+    meta = get_meta_data()
+    raid_meta = meta['raid']
+    cur_raid_disk_list = raid_meta['device']
+    for item in list(cur_raid_disk_list):
+        if item == child_disk_name:
+            cur_raid_disk_list.remove(item)
+    # filter the removed disk and get other ok disk name
+    if not cur_raid_disk_list:
+        raise RestfulError('580 Error: deadly error, cannot find valid first disk partition, in check_new_disk_vol() function !!')
+    other_child_disk_name = cur_raid_disk_list[0]  # get default other list ones
+
+    status, stdout, stderr = invoke_shell('parted -s /dev/'+ other_child_disk_name +' print | grep "^[ 0-9]" | awk \'{ print $4 }\'')
     if status == 0 and stdout:
         cur_vol = stdout.strip()
         cur_vol = cur_vol[0:-2]
@@ -482,7 +486,7 @@ def check_new_disk_vol(dev_name):
         raid_vol = raid_vol[0:-2]
     diff = int(cur_vol) - int(raid_vol)
     if diff >= 0:
-        return raid_vol
+        return int(raid_vol)
     else:
         return 0
 
@@ -496,6 +500,13 @@ def add_spare_disk(dev_name):
     is_started = has_raid_started()
     if not is_started:
         raise RestfulError('580 Error: Raid has not started')
+        return False
+
+    # checking cur raid status, if status is recovering, not add new disk to raid
+    raid_status = raid_base_info()
+    cur_status = raid_status['state']
+    if re.compile('.*recovering.*').match(cur_status):
+        raise RestfulError('580 Warnning: Raid is rebuilding, cannot add new disk')
         return False
 
     # checking cur raid disk volume, just '500' or '1000' or '2000'
