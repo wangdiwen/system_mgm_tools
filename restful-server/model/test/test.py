@@ -16,7 +16,8 @@ def detect_systool():
     data = {}
     sys_tool_list = ['ethtool', 'ifconfig', 'hostname', 'iptables', 'ping', 'route', 'traceroute', \
                     'service', 'rpm', 'gpg', 'df', 'mount', 'umount', 'swapon', 'chown', 'swapoff', \
-                    'fdisk', 'dmidecode', 'lspci', 'ntpdate', 'chrt', 'renice', 'tail', 'date', 'sed']
+                    'fdisk', 'dmidecode', 'lspci', 'ntpdate', 'chrt', 'renice', 'tail', 'date', 'sed', \
+                    'mkfs.xfs', 'parted', 'mdadm', 'resize2fs']
     for tool in sys_tool_list:
         data[tool] = 'no'
         shell = 'which ' + tool
