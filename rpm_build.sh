@@ -110,7 +110,7 @@ function build_rpm_pkg() {
     rpmbuild -bb $HOME/rpmbuild/SPECS/web-frontend.spec
     [ "$?" != "0" ] && { warning 'building web-frontend failed !'; exit 1; }
 
-    tips 'copy rpm pkg to $HOME ...'
+    tips "copy rpm pkg to $HOME ..."
     mv $HOME/rpmbuild/RPMS/x86_64/restful-server*.rpm $HOME
     mv $HOME/rpmbuild/RPMS/x86_64/web-frontend*.rpm $HOME
 
