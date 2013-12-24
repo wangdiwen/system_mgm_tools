@@ -331,7 +331,7 @@ def remove_faulty_dev(dev_name):  # disk_1
     # checking cur raid status, if status is recovering, not add new disk to raid
     raid_status = raid_base_info()
     cur_status = raid_status['state']
-    if re.compile('.*recovering.*').match(cur_status):
+    if re.compile('.*recovering.*').match(cur_status) or re.compile('.*reshaping.*').match(cur_status):
         raise RestfulError('580 Warnning: Raid is rebuilding, cannot force remove disk')
         return False
 
@@ -505,7 +505,7 @@ def add_spare_disk(dev_name):
     # checking cur raid status, if status is recovering, not add new disk to raid
     raid_status = raid_base_info()
     cur_status = raid_status['state']
-    if re.compile('.*recovering.*').match(cur_status):
+    if re.compile('.*recovering.*').match(cur_status) or re.compile('.*reshaping.*').match(cur_status):
         raise RestfulError('580 Warnning: Raid is rebuilding, cannot add new disk')
         return False
 
