@@ -71,6 +71,8 @@ class Color:
 
 def log(str = ''):
     print '\033[0;3%dm%s\033[0m' % (Color.GREEN, '\t'+str)
+def tips(str = ''):
+    print '\033[0;3%dm%s\033[0m' % (Color.GREEN, '\t'+str)
 def error(str = ''):
     print '\033[0;3%dm%s\033[0m' % (Color.RED, '\t'+str)
 def warning(str = ''):
@@ -227,11 +229,38 @@ print 'Checking has builded raid device or not ...'
 has_raid = has_raid_aleady()
 # has_raid = False                                            # here, test ...
 if has_raid:
-    error('Error: has builded RAID device /dev/md0')
-    quit(1)
-else:
-    log('not ...')
+    warning('Warnning: has builded RAID device /dev/md0')
 
+    print 'checking mount raid device ? ...'
+    out = shell_cmd('df -h | grep md0 | wc -l', True, 2)
+    if out.strip() != '0':  # has mounted
+        tips('has mounted')
+        mounted_point = shell_cmd('df -h | grep md0 | awk \'{ print $6 }\'', True, 2)
+        if mounted_point:
+            print 'try to umount the raid device ...'
+            status = shell_cmd('umount ' + mounted_point, True, 1)
+            if status == 0:
+                tips('success')
+                print 'try to stop the old raid ...'
+                status = shell_cmd('mdadm -Ss', True, 1)
+                if status == 0:
+                    tips('stop success')
+                else:
+                    warning('stop failed')
+                    warning('call professional guy to solve problem ...')
+                    quit(1, 'bye ...')
+            else:
+                warning('umount raid failed, maybe some program is using the mount point ' + mounted_point)
+                print 'call professional guy to solve this problem !'
+                quit(0, 'bye ...')
+        else:
+            warning('cannot find valid mount point !')
+            print 'call professional guy to solve this problem !'
+            quit(0, 'bye ...')
+else:
+    log('not raid')
+
+quit(0, 'test ...')
 ###############################################################################
 
 print 'Checking system available disk ...'
