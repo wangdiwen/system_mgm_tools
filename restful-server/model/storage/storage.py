@@ -90,8 +90,8 @@ def mount(info):
 
     if 'device-type' in info.keys():
         device_type = info['device-type']
-        if not re.compile("^(ext2|ext3|ext4|nfs|vfat|ntfs|cifs|swap|ramfs|tmpfs)$").match(device_type):
-            error('invalid device type, use [ext2|ext3|ext4|nfs|vfat|ntfs|cifs|swap|ramfs|tmpfs]')
+        if not re.compile("^(ext2|ext3|ext4|nfs|vfat|ntfs|cifs|swap|ramfs|tmpfs|xfs)$").match(device_type):
+            error('invalid device type, use [ext2|ext3|ext4|nfs|vfat|ntfs|cifs|swap|ramfs|tmpfs|xfs]')
     if not type == 'swap':
         if not 'mount-point' in info.keys():
             error('has no [mount-point] info')
@@ -141,7 +141,6 @@ def mount(info):
             if already_has_mount_point:
                 shutil.rmtree(mount_point)
             return False
-
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
@@ -167,7 +166,6 @@ def mount(info):
             if already_has_mount_point:
                 shutil.rmtree(mount_point)
             return False
-
     elif type == 'samba':
         if not re.compile("^\/\/").match(device):
             return False
