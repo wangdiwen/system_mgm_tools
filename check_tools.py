@@ -76,6 +76,12 @@ sys_tool_list = {
 
 failed_tool = []
 
+# Checking user
+user = shell_cmd('whoami', True, 2)
+if user.strip() != 'root':
+    warning('You are not root !')
+    quit(1, 'bye ...')
+
 for tool in sys_tool_list.keys():
     print 'Checking system tool ' + tool + ' ...'
     ret = shell_cmd('which ' + tool, True, 1)
