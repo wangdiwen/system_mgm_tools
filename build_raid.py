@@ -260,7 +260,7 @@ if has_raid:
 else:
     log('not raid')
 
-quit(0, 'test ...')
+#quit(0, 'test ...')
 ###############################################################################
 
 print 'Checking system available disk ...'

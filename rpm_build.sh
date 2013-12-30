@@ -79,7 +79,9 @@ function build_rpm_pkg() {
 
     # set the rpm build env
     which rpmbuild > /dev/null 2>&1
-    [ "$?" != "0" ] && { error 'not rpmbuild tool, quit ...'; exit 1; }
+    [ "$?" != "0" ] && { error 'not rpmbuild tool, quit ...'; \
+		echo -e "y\n" | yum install rpm-build; \ 
+		exit 1; }
 
     tips 'set rpm build env to local /root ...'
     echo "%_topdir $HOME/rpmbuild" > ~/.rpmmacros
