@@ -199,9 +199,9 @@ def new_raid_refresh_status():
     for item in raid_meta['device']:
         raid_config_disk_list.append(item[0:6])
 
-    print cur_disk_list
-    print sys_disk_list
-    print raid_config_disk_list
+    print 'cur_disk_list ==> ' + cur_disk_list
+    print 'sys_disk_list ==> ' + sys_disk_list
+    print 'raid_config_disk_list ==> ' + raid_config_disk_list
 
     global_raid_data = RaidExt.new_raid_data
     for key in global_raid_data.keys():
