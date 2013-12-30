@@ -46,11 +46,11 @@ class Color:
     BLUE = 4
 
 def log(str = ''):
-    print '\033[0;3%dm%s\033[0m' % (Color.GREEN, str)
+    print '\033[0;3%dm%s\033[0m' % (Color.GREEN, '\t'+str)
 def error(str = ''):
-    print '\033[0;3%dm%s\033[0m' % (Color.RED, str)
+    print '\033[0;3%dm%s\033[0m' % (Color.RED, '\t'+str)
 def warning(str = ''):
-    print '\033[0;3%dm%s\033[0m' % (Color.YELLOW, str)
+    print '\033[0;3%dm%s\033[0m' % (Color.YELLOW, '\t'+str)
 def quit(code = 0, msg = ''):
     if msg:
         print msg
@@ -83,12 +83,14 @@ for tool in sys_tool_list.keys():
         log('not installed')
         time.sleep(1)
         print 'try to install ' + tool + ' ...'
-        ret_ins = shell_cmd('echo -e "y\n" | yum install ' + sys_tool_list[tool])
+        ret_ins = shell_cmd('echo -e "y\n" | yum install ' + sys_tool_list[tool], True, 1)
         if ret_ins == 0:
             log('success')
         else:
             warning('install failed')
             failed_tool.append(tool)
+    else:
+        log('has installed')
 
 log('=========== Install failed tools =============')
 if failed_tool:
