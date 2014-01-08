@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # chkconfig: 35 90 90
-# description: Starts and stops the restful server. 
+# description: Starts and stops the restful server.
 #
 
 # Source function library.
@@ -27,13 +27,22 @@ RETVAL=0
 
 start() {
         KIND="restful-server"
+    echo -n $"Starting RAID services ..."
+    num=`cat /proc/mdstat | grep md0 | wc -l`
+    if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then
+        mdadm -As
+        [ "$?" == "0" ] && { echo "starting success"; }
+    else
+        echo "RAID is running"
+    fi
+
 	echo -n $"Starting $KIND services: "
 	cd /usr/local/restful-server
 	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
 	RETVAL=$?
 	echo
 	return $RETVAL
-}	
+}
 
 stop() {
         KIND="restful-server"
@@ -42,12 +51,12 @@ stop() {
 	RETVAL=$?
 	echo
 	return $RETVAL
-}	
+}
 
 restart() {
 	stop
 	start
-}	
+}
 
 rhstatus() {
 	status /usr/local/restful-server/restful-server.py
@@ -55,7 +64,7 @@ rhstatus() {
 	if [ $RETVAL -ne 0 ] ; then
 		return $RETVAL
 	fi
-}	
+}
 
 
 # Allow status as non-root.
