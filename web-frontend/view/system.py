@@ -18,7 +18,7 @@ class Process:
     def GET(self):
         render = web.template.frender("./view/templates/system_process.html")
         return render()
-        
+
 class SharedMemory:
     def GET(self):
         try:
@@ -28,7 +28,7 @@ class SharedMemory:
         else:
             render = web.template.frender("./view/templates/system_shared_memory.html")
             return render(res)
-            
+
 class DateTime:
     def GET(self):
         try:
@@ -38,7 +38,7 @@ class DateTime:
         else:
             render = web.template.frender("./view/templates/system_datetime.html")
             return render()
-            
+
 class RunMode:
     def GET(self):
         ret = False
@@ -47,16 +47,16 @@ class RunMode:
             if out == "5":
                 out, status = exec_sub("cat /proc/mounts|grep -q '/dev/root /'")
             elif out == "6":
-                out, status = exec_sub("cat /proc/mounts |grep -Eq '/dev/[a-z0-9]+ / '")
+                out, status = exec_sub("cat /proc/mounts |grep -E '/dev/[a-z0-9]+ / '")
         except Exception as e:
             ret = True
-        
+
         return json.dumps(ret)
-        
+
 class Env:
     def GET(self):
         render = web.template.frender("./view/templates/system_env.html")
         return render()
-        
+
 
 app = web.application(urls, locals())

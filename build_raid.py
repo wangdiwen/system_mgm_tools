@@ -210,19 +210,94 @@ def check_disk_volume(sys_disk_list):  # return number: 500, 1000 ...
     if disk_vol < 500:
         error('Checking system disk, find one disk volume < 500G, cannot builded raid, quit ...')
     return disk_vol
+
+def usage_help():
+    usage = "Usage: ./build_raid.py [options]\n\
+        options: \n\
+                start => start raid\n\
+                stop  => stop the current raid device\n\
+                delete => delete the old raid device\n\
+                build => build raid"
+    tips(usage)
+    quit(0)
 ###############################################################################
+def start_raid():
+    print 'start raid device ...'
+    status = shell_cmd('mdadm -As', True, 1)
+    if status == 0:
+        tips('success')
+    else:
+        tips('failed')
+    quit(0, 'bye ...')
+
+def stop_raid():
+    print 'stop raid device ...'
+    status = shell_cmd('mdadm -Ss', True, 1)
+    if status == 0:
+        tips('success')
+    else:
+        tips('failed')
+    quit(0, 'bye ...')
+
+def delete_raid():
+    print 'checking raid mount ...'
+    out = shell_cmd('df -h | grep md0 | awk \'{ print $6 }\'', True, 2)
+    if out:
+        mounted_point = out.strip()
+        print 'umount ' + mounted_point + ' ...'
+        status = shell_cmd('umount ' + mounted_point, True, 1)
+        if status == 0:
+            tips('ok')
+
+    print 'try to stop the raid device ...'
+    status = shell_cmd('mdadm -Ss', True, 1)
+    if status == 0:
+        tips('ok')
+
+    print 'clean raid disk info ...'
+    disk_str = ''
+    sys_disk = check_ava_disk()
+    if sys_disk:
+        tmp_disk_list = []
+        for item in sys_disk:
+            tmp_disk_list.append('/dev/' + item)
+        disk_str = ' '.join(tmp_disk_list)
+    status = shell_cmd('mdadm --zero-superblock ' + disk_str, True, 1)
+    if status == 0:
+        tips('success')
+
+    quit(1, 'bye ...')
 ###############################################################################
 ###############################################################################
 ###############################################################################
 
 ############################ Main Process #####################################
 
+param_len = len(sys.argv)
+param = ''
+if param_len != 2:
+    usage_help()
+else:
+    param = sys.argv[1]
+if not param in ['start', 'stop', 'delete', 'build']:
+    usage_help()
+
+if param == 'start':
+    start_raid()
+elif param == 'stop':
+    stop_raid()
+elif param == 'delete':
+    delete_raid()
+else:
+    print 'Prepareing build raid now ...'
+
+quit(0, 'test...')
+
 print 'Checking user ...'
 is_root = check_user()
 if not is_root:
     error('Only root user can do this !')
     quit(1)
-
 ###############################################################################
 
 print 'Checking has builded raid device or not ...'
@@ -241,14 +316,6 @@ if has_raid:
             status = shell_cmd('umount ' + mounted_point, True, 1)
             if status == 0:
                 tips('success')
-                print 'try to stop the old raid ...'
-                status = shell_cmd('mdadm -Ss', True, 1)
-                if status == 0:
-                    tips('stop success')
-                else:
-                    warning('stop failed')
-                    warning('call professional guy to solve problem ...')
-                    quit(1, 'bye ...')
             else:
                 warning('umount raid failed, maybe some program is using the mount point ' + mounted_point)
                 print 'call professional guy to solve this problem !'
@@ -257,6 +324,14 @@ if has_raid:
             warning('cannot find valid mount point !')
             print 'call professional guy to solve this problem !'
             quit(0, 'bye ...')
+    print 'try to stop the old raid ...'
+    status = shell_cmd('mdadm -Ss', True, 1)
+    if status == 0:
+        tips('stop success')
+    else:
+        warning('stop failed')
+        warning('call professional guy to solve problem ...')
+        quit(1, 'bye ...')
 else:
     log('not raid')
 

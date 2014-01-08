@@ -167,12 +167,16 @@ def alarm_info():
     raid_info = raid_base_info()
     if 'failed devices' in raid_info.keys() and raid_info['failed devices'] != '0':
         data = '1'
-    # checking has force removed disk
-    if data == '0':
-        force_removed_disk_list = get_force_removed()
-        # print force_removed_disk_list
-        if len(force_removed_disk_list) >= 1:
-            data = '2'
+    else:           # check state of 'degraded', reshaping, rebuilding
+        state = raid_info['state'].strip()
+        if state != 'clean':
+            data = '4'
+
+    # checking has force removed disk, this situation is most important
+    force_removed_disk_list = get_force_removed()
+    # print force_removed_disk_list
+    if len(force_removed_disk_list) >= 1:
+        data = '2'
     return data
 
 def new_raid_manager():
@@ -199,9 +203,9 @@ def new_raid_refresh_status():
     for item in raid_meta['device']:
         raid_config_disk_list.append(item[0:6])
 
-    print 'cur_disk_list ==> ' + cur_disk_list
-    print 'sys_disk_list ==> ' + sys_disk_list
-    print 'raid_config_disk_list ==> ' + raid_config_disk_list
+    print 'cur_disk_list ==> ' + ' '.join(cur_disk_list)
+    print 'sys_disk_list ==> ' + ' '.join(sys_disk_list)
+    print 'raid_config_disk_list ==> ' + ' '.join(raid_config_disk_list)
 
     global_raid_data = RaidExt.new_raid_data
     for key in global_raid_data.keys():
@@ -350,35 +354,18 @@ def remove_faulty_dev(dev_name):  # disk_1
     if stderr:
         print stderr.strip()
 
-    shell = 'mdadm -r /dev/md0 /dev/' + dev_name
     print 'remove faulty disk ...'
+    shell = 'mdadm -r /dev/md0 /dev/' + dev_name
     print shell
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
-        # stop this disk
-        disk_control_map = {
-            'disk_11': '0 0 0 0',
-            'disk_21': '0 0 1 0',
-            'disk_31': '0 0 2 0',
-            'disk_41': '0 0 3 0',
-            'disk_51': '1 0 0 0',
-            'disk_61': '1 0 1 0',
-            'disk_71': '1 0 2 0',
-            'disk_81': '1 0 3 0',
-        }
-        if not dev_name in disk_control_map.keys():
-            raise RestfulError('580 Error: disk invalid, not in [ disk_{1,2,3,4,5,6,7,8}1 ] !')
-            return False;
-
-        disk_str = disk_control_map[dev_name]
-        sta, out, err = invoke_shell('echo \"scsi remove-single-device '+ disk_str +'\" > /proc/scsi/scsi')
-        if err:
-            print '580 Warnning: stop scsi device something wrong'
-            # cancel failed on this situation
-            # raise RestfulError('580 Warnning: stop scsi device something wrong')
-
         # remember the lastest faulty remove disk name
         RaidExt.faulty_disk_name = dev_name[0:6]
+
+        print 'stop this scsi disk ' + dev_name
+        ret = stop_scsi_disk(dev_name[0:6])
+        if not ret:
+            raise RestfulError('580 Error: stop scsi disk failed')
         return True
     else:
         if stderr:
@@ -443,6 +430,11 @@ def active_new_disk(dev_name):  # like 'disk_1'
                     if ret_render:
                         shell_add = 'mdadm -Ds >> /etc/mdadm.conf'
                         sta, out, err = invoke_shell(shell_add)
+
+                    # here, raise md0 XFS filesystem
+                    ret = resize_raid_fs()
+                    # here, update_scsi_num id
+                    ret = update_scsi_num(dev_name)
 
                     return True
                 else:
@@ -565,34 +557,98 @@ def add_spare_disk(dev_name):
             if ret_render:
                 shell_add = 'mdadm -Ds >> /etc/mdadm.conf'
                 sta, out, err = invoke_shell(shell_add)
-                if sta == 0:
-                    return True
+
+        # here, resize the md0 XFS file system
+        ret = resize_raid_fs()
+        # here, update_scsi_num id
+        ret = update_scsi_num(dev_name)
+        return True
     else:
         if stderr:
             raise RestfulError('580 Error: ' + stderr.strip())
     return False
 
-def resise_raid_fs():
+def stop_scsi_disk(dev_name):  # like: 'disk_1'
+    global_raid_data = RaidExt.new_raid_data
+    cur_raid_key = ''
+    scsi_master = ''
+    scsi_id = ''
+    ret = False
+
+    num = dev_name[5]
+    if num in ['1', '2', '3', '4']:
+        scsi_master = '0'
+    else:
+        scsi_master = '1'
+
+    for key in global_raid_data.keys():
+        device = global_raid_data[key]['device']
+        if device == dev_name:
+            scsi_id = global_raid_data[key]['scsi']
+            cur_raid_key = key
+            break
+    if scsi_id != '' and scsi_master != '':  # found
+        control_str = scsi_master + ' 0 ' + scsi_id + ' 0'
+        shell = 'echo \"scsi remove-single-device '+ control_str +'\" > /proc/scsi/scsi'
+        print shell
+        sta, out, err = invoke_shell(shell)
+        if sta == 0:
+            ret = True
+    return ret
+
+def update_scsi_num(dev_name):
+    global_raid_data = RaidExt.new_raid_data
+    cur_raid_key = ''
+
+    # find scsi_master id
+    num = dev_name[5]
+    if num in ['1', '2', '3', '4']:
+        scsi_master = '0'
+    else:
+        scsi_master = '1'
+    # find scsi_id
+    for key in global_raid_data.keys():
+        device = global_raid_data[key]['device']
+        if device == dev_name:
+            cur_raid_key = key
+            break
+    # update this position scsi id, find the scsi_master max num+1
+    if cur_raid_key != '':
+        scsi_num_list = []
+        tmp_num_list = []
+        if scsi_master == '0':
+            tmp_num_list = ['1','2','3','4']
+        else:
+            tmp_num_list = ['5','6','7','8']
+        for num in tmp_num_list:
+            raid_obj = global_raid_data[num]
+            scsi_num_list.append(raid_obj['scsi'])
+        scsi_num_list.sort()
+        max_num = scsi_num_list[-1]
+        update_num = int(max_num) + 1
+        RaidExt.new_raid_data[cur_raid_key]['scsi'] = update_num
+        return True
+    return False
+
+def resize_raid_fs():
     # check has started or not
     has_started = has_raid_started()
     if not has_started:
         raise RestfulError('580 Error: Raid has not started !')
-    # check if has start resize2fs /dev/md0 or not
-    sta, out, err = invoke_shell('ps -ef | grep resize2fs | grep -v grep | wc -l')
-    val = int(out)
-    if val > 0:
-        raise RestfulError('580 Error: Already start resize2fs program, can not use this function !')
-        return False
 
-    shell = 'resize2fs /dev/md0 &'
-    # print 'resize the raid file system ...'
-    # print shell
-    status, stdout, stderr = invoke_shell(shell, False)
+    status, stdout, stderr = invoke_shell('xfs_growfs /dev/md0', True)
     if stderr:
         raise RestfulError('580 Error: ' + stderr.strip().replace("\n", ' '))
-    if status == None:
+    if status == 0:
         return True
     return False
+
+def raid_sync_progress():
+    progress = '100%'
+    status, stdout, stderr = invoke_shell('cat /proc/mdstat | grep finish | head -n 1 | awk \'{ print $4 }\'', True)
+    if stdout:
+        progress = stdout.strip()
+    return progress
 ###############################################################################
 class RaidMonitor(threading.Thread):
     def __init__(self, lock, thread_name):
@@ -609,7 +665,6 @@ class RaidMonitor(threading.Thread):
 class Raid:
     def GET(self):
         base_info = raid_base_info()
-        # base_info = available_system_disk()
         return json.dumps(base_info, indent = 4)
 
     def PUT(self):
@@ -625,34 +680,42 @@ class RaidExt:
         '1': {
             'device': 'disk_1',
             'status': '00',
+            'scsi': '0',
         },
         '2': {
             'device': 'disk_2',
             'status': '00',
+            'scsi': '1';
         },
         '3': {
             'device': 'disk_3',
             'status': '00',
+            'scsi': '2';
         },
         '4': {
             'device': 'disk_4',
             'status': '00',
+            'scsi': '3';
         },
         '5': {
             'device': 'disk_5',
             'status': '00',
+            'scsi': '0';
         },
         '6': {
             'device': 'disk_6',
             'status': '00',
+            'scsi': '1';
         },
         '7': {
             'device': 'disk_7',
             'status': '00',
+            'scsi': '2';
         },
         '8': {
             'device': 'disk_8',
             'status': '00',
+            'scsi': '3';
         }
     }
 
@@ -677,6 +740,8 @@ class RaidExt:
         elif arg == 'test':
             ret = new_raid_test()
             return json.dumps(ret, indent = 4)
+        elif arg == 'sync':
+            return raid_sync_progress()
         return ''
 
     def PUT(self, arg):
@@ -695,7 +760,7 @@ class RaidExt:
             else:
                 raise RestfulError('580 Error: stop raid failed')
         elif arg == 'resizefs':
-            ret = resise_raid_fs()
+            ret = resize_raid_fs()
             if ret:
                 return 'resize raid file system success'
             else:
@@ -705,10 +770,6 @@ class RaidExt:
             input_data = json.loads(web_data) if web_data else {}
             if not 'active' in input_data.keys():
                 raise RestfulError('580 Error: input data not has [active] field')
-
-            # test ...
-            # raise RestfulError('580 Error: ' + input_data['active'])
-            # return
 
             ret = active_new_disk(input_data['active'])
             if ret:

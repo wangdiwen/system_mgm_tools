@@ -11,7 +11,7 @@ Group: Application/System
 Vendor: Vmediax.com
 Source: restful-server
 URL: http://vmediax.com/download/restful-server-1.3.1.tar.gz
-Distribution: CentOS 6.4 5.9 x86_64 
+Distribution: CentOS 6.4 5.9 x86_64
 Packager: wangdiwen <wangdiwen@vmediax.com>
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Prefix: /
@@ -121,7 +121,7 @@ fi
 %{install_path}
 
 %config %{log_path}/restful.log
-%config %{etc_path_conf}/restful-server 
+#%config %{etc_path_conf}/restful-server
 %config %{conf_path}/global_meta_data.json
 #%config %{conf_path}/ntp_server
 %config %{conf_path}/rpm-secret-key
