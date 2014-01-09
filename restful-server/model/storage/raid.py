@@ -651,8 +651,8 @@ def update_scsi_num(dev_name):
             update_num = str(int(max_num) + 1)
         else:
             update_num = '0'
-        # special here,
-        # 如果发现计算得出的 scsi_id > 当前系统的 scsi_id 最大值，则不需要更新scsi_id
+        # special here
+        # if found when computer scsi_id > current system scsi_id, then not update
         if system_scsi_id_max != -1 and update_num != '' and int(update_num) <= system_scsi_id_max:
             RaidExt.new_raid_data[cur_raid_key]['scsi'] = update_num
         return True
@@ -666,7 +666,7 @@ def resize_raid_fs():
 
     status, stdout, stderr = invoke_shell('xfs_growfs /dev/md0', True)
     if stderr:
-        raise RestfulError('580 Error: ' + stderr.strip().replace("\n", ' '))
+        raise RestfulError('580 Warnning: You can ignore this alarm ! ' + stderr.strip().replace("\n", ' '))
     if status == 0:
         return True
     return False
