@@ -5,7 +5,7 @@
 Summary: Web Frontend Program
 Name: web-frontend
 Version: 1.3
-Release: 9rc1.el6
+Release: 9rc2.el6
 License: GPL
 Group: Application/System
 Vendor: Vmediax.com

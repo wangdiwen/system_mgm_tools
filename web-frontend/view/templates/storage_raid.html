@@ -449,7 +449,7 @@ function new_remove_device_ask(num) {
     register_event('new_remove_device', '确定要移除该设备吗？', num);
 }
 function new_remove_device_force_ask(num) {
-    register_event('new_remove_device_force', '确定强制移除该设备吗？', num);
+    register_event('new_remove_device_force', '确定弹出硬盘吗？', num);
 }
 function new_active_device_ask(num) {
     register_event('new_active_device', '确定要激活该设备吗？', num);
@@ -527,7 +527,7 @@ function new_remove_device_force(num) {
         // checking is alarming or not
         var is_alarm = is_alarming();
         if (is_alarm) {
-            alert('当前处于警报状态，不可以移除设备！！！');
+            alert('当前处于警报状态，不可以弹出！！！');
             checking_result(false);
             return;
         }

@@ -335,7 +335,9 @@ def remove_faulty_dev(dev_name):  # disk_1
     # checking cur raid status, if status is recovering, not add new disk to raid
     raid_status = raid_base_info()
     cur_status = raid_status['state']
-    if re.compile('.*recovering.*').match(cur_status) or re.compile('.*reshaping.*').match(cur_status):
+    if re.compile('.*recovering.*').match(cur_status) \
+        or re.compile('.*reshaping.*').match(cur_status) \
+        or re.compile('.*degraded.*').match(cur_status):
         raise RestfulError('580 Warnning: Raid is rebuilding, cannot force remove disk')
         return False
 
@@ -592,9 +594,24 @@ def stop_scsi_disk(dev_name):  # like: 'disk_1'
         shell = 'echo \"scsi remove-single-device '+ control_str +'\" > /proc/scsi/scsi'
         print shell
         sta, out, err = invoke_shell(shell)
+        sta = 0
         if sta == 0:
             ret = True
     return ret
+
+def find_system_scsi_id_max(option = 0):  # option: 0 -> scsi0, 1 -> scsi1
+    shell = 'cat /proc/scsi/scsi | grep scsi'+ str(option) +' | awk \'{ print $6 }\' | cut -c2'
+    sta, out, err = invoke_shell(shell)
+    if sta == 0 and out:
+        tmp_num_list = []
+        lines = out.split("\n")
+        for item in lines:
+            tmp_num_list.append(int(item))
+        tmp_num_list.sort()
+        max_num = tmp_num_list[-1]
+        return max_num
+    else:
+        return -1
 
 def update_scsi_num(dev_name):
     global_raid_data = RaidExt.new_raid_data
@@ -612,6 +629,10 @@ def update_scsi_num(dev_name):
         if device == dev_name:
             cur_raid_key = key
             break
+    # here, find current system scsi_id max num
+    system_scsi_id_max = find_system_scsi_id_max(int(scsi_master))
+    update_num = ''
+
     # update this position scsi id, find the scsi_master max num+1
     if cur_raid_key != '':
         scsi_num_list = []
@@ -624,10 +645,16 @@ def update_scsi_num(dev_name):
             raid_obj = global_raid_data[num]
             if raid_obj['scsi']:
                 scsi_num_list.append(raid_obj['scsi'])
-        scsi_num_list.sort()
-        max_num = scsi_num_list[-1]
-        update_num = int(max_num) + 1
-        RaidExt.new_raid_data[cur_raid_key]['scsi'] = update_num
+        if scsi_num_list:
+            scsi_num_list.sort()
+            max_num = scsi_num_list[-1]
+            update_num = str(int(max_num) + 1)
+        else:
+            update_num = '0'
+        # special here,
+        # 如果发现计算得出的 scsi_id > 当前系统的 scsi_id 最大值，则不需要更新scsi_id
+        if system_scsi_id_max != -1 and update_num != '' and int(update_num) <= system_scsi_id_max:
+            RaidExt.new_raid_data[cur_raid_key]['scsi'] = update_num
         return True
     return False
 
@@ -818,10 +845,9 @@ class RaidExt:
 
     def DELETE(self, arg):
         if arg:
-            ret = remove_faulty_dev(arg.strip())
-            if ret:
-                return 'remove faulty disk success'
-            else:
+            # ret = remove_faulty_dev(arg.strip())
+            ret = stop_scsi_disk(arg.strip())
+            if not ret:
                 raise RestfulError('580 Error: remove faulty disk failed')
         return ''
 
