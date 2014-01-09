@@ -12,6 +12,7 @@ from common.restfulclient import RestfulError
 from model.log.log import RestLog
 from common.deamon_task import LogClear
 from model.storage.raid import RaidMonitor
+from model.storage.raid import ScsiMonitor
 
 #################################################################
 
@@ -237,6 +238,9 @@ if __name__ == "__main__":
     # raid_thread_lock = threading.Lock()
     # raid_monitor_process = RaidMonitor(raid_thread_lock, 'monitor_raid')
     # raid_monitor_process.start()
+
+    scsi_monitor = ScsiMonitor()
+    scsi_monitor.init_scsi_raid_map()
 
     # sync ntp server, just sync once when server run
     ntp_sync()

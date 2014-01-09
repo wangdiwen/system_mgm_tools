@@ -80,7 +80,7 @@ def raid_base_info():
                     length = len(tmp_list)
                     if length == 2:
                         # print tmp_list[0].strip().lower()
-                        data[tmp_list[0].strip().lower()] = tmp_list[1]
+                        data[tmp_list[0].strip().lower()] = tmp_list[1].strip()
         data['devices'] = list
     if data:
         data['device name'] = dev
@@ -662,6 +662,34 @@ class RaidMonitor(threading.Thread):
             # self.lock.release()         # release lock
             time.sleep(3)
 
+class ScsiMonitor():
+    def __init__(self):
+        pass
+    def init_scsi_raid_map(self):
+        global_raid_data = RaidExt.new_raid_data
+        # init scsi0 devices
+        status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi0 | awk \'{ print $6 }\' | cut -c2')
+        if status == 0 and stdout:
+            lines = stdout.split("\n")  # like: 0,1,2,3
+            length = len(lines)
+            for item in [1, 2, 3, 4]:
+                if item <= length:
+                    global_raid_data[str(item)]['scsi'] = str(item - 1)
+        # init scsi1 devices
+        status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi1 | awk \'{ print $6 }\' | cut -c2')
+        if status == 0 and stdout:
+            lines = stdout.split("\n")  # like: 0,1,2,3
+            length = len(lines)
+            for item in [5, 6, 7, 8]:
+                if item <= length:
+                    global_raid_data[str(item)]['scsi'] = str(item - 1)
+
+        json_data = json.dumps(RaidExt.new_raid_data, indent = 4)
+        print json_data
+        shell = 'echo \"' + json_data + '\" > /opt/system/conf/restful-server/init_scsi_raid_map.log'
+        status, stdout, stderr = shell_cmd(shell)
+        return True
+
 class Raid:
     def GET(self):
         base_info = raid_base_info()
@@ -680,42 +708,42 @@ class RaidExt:
         '1': {
             'device': 'disk_1',
             'status': '00',
-            'scsi': '0',
+            'scsi': ''
         },
         '2': {
             'device': 'disk_2',
             'status': '00',
-            'scsi': '1';
+            'scsi': ''
         },
         '3': {
             'device': 'disk_3',
             'status': '00',
-            'scsi': '2';
+            'scsi': ''
         },
         '4': {
             'device': 'disk_4',
             'status': '00',
-            'scsi': '3';
+            'scsi': ''
         },
         '5': {
             'device': 'disk_5',
             'status': '00',
-            'scsi': '0';
+            'scsi': ''
         },
         '6': {
             'device': 'disk_6',
             'status': '00',
-            'scsi': '1';
+            'scsi': ''
         },
         '7': {
             'device': 'disk_7',
             'status': '00',
-            'scsi': '2';
+            'scsi': ''
         },
         '8': {
             'device': 'disk_8',
             'status': '00',
-            'scsi': '3';
+            'scsi': ''
         }
     }
 
