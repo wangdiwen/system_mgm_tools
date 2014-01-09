@@ -3,7 +3,7 @@
 import web
 import re
 import os, shutil
-from common import invoke_shell, rpm_query, rpm_install, rpm_update, get_rpminfo, get_sys_startup_mode
+from common import invoke_shell, rpm_query, rpm_install, rpm_update, get_rpminfo, get_sys_startup_mode, new_get_sys_startup_mode
 from common.restfulclient import RestfulError
 
 from common.global_helper import *  # public helper functions
@@ -138,7 +138,8 @@ def upload_install(data):
             # It has restful-server and web-frontend
             nodeps = False
             if old_rpm_info['name'] == 'restful-server' or old_rpm_info['name'] == 'web-frontend':
-                sys_startup_mode = get_sys_startup_mode()
+                # sys_startup_mode = get_sys_startup_mode()  # old interface
+                sys_startup_mode = new_get_sys_startup_mode()  # new iface
                 if sys_startup_mode == 'release':
                     raise RestfulError('580 Error: Current system mode is release, Cannot upgrade system manager tool')
                 nodeps = True

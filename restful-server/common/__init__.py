@@ -19,6 +19,26 @@ def get_sys_startup_mode():
                 cur_mode = 'develop'
     return cur_mode
 
+def new_get_sys_startup_mode():
+    cur_mode = 'release'
+    cur_system = '5'
+    # checking cur system is 5 or 6
+    status, stdout, stderr = invoke_shell('uname -a | awk \'{ print $3 }\'')
+    if status == 0 and stdout:
+        if re.compile('.*el6.*').match(stdout):
+            cur_system = '6'
+
+    cmd = 'cat /proc/mounts | grep -E "/dev/sd[1-z][0-9] / " | wc -l'
+    if cur_system == '5':
+        cmd = 'cat /proc/mounts | grep -E "/dev/root / " | wc -l'
+
+    status, stdout, stderr = invoke_shell(cmd)
+    if status == 0 and stdout:
+        num = stdout.strip()
+        if num != '0':  #develop
+            cur_mode = 'develop'
+    return cur_mode
+
 def get_rpminfo(rpm_name):
     data = {}
     re_list = [
