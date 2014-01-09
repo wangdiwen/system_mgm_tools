@@ -622,7 +622,8 @@ def update_scsi_num(dev_name):
             tmp_num_list = ['5','6','7','8']
         for num in tmp_num_list:
             raid_obj = global_raid_data[num]
-            scsi_num_list.append(raid_obj['scsi'])
+            if raid_obj['scsi']:
+                scsi_num_list.append(raid_obj['scsi'])
         scsi_num_list.sort()
         max_num = scsi_num_list[-1]
         update_num = int(max_num) + 1
