@@ -165,7 +165,9 @@ def alarm_info():
         return data
     # checking disk faulty
     raid_info = raid_base_info()
-    if 'failed devices' in raid_info.keys() and raid_info['failed devices'] != '0':
+    if 'failed devices' in raid_info.keys() \
+        and raid_info['failed devices'] != '0' \
+        and re.compile('recovering').match(raid_info['state']):
         data = '1'
     else:           # check state of 'degraded', reshaping, rebuilding
         state = raid_info['state'].strip()
@@ -214,6 +216,7 @@ def new_raid_refresh_status():
         status = global_raid_data[key]['status']
         grade_1 = '0'
         grade_2 = '0'
+        RaidExt.new_raid_data[key]['state'] = 'not found'
 
         # checking the status of per disk
         is_in_raid = True if device in raid_config_disk_list else False
@@ -225,12 +228,19 @@ def new_raid_refresh_status():
                 cur_status = disk_status_map[device]  # A, S, F
                 if cur_status in ['A', 'S']:  # normal
                     grade_2 = '1'
+                    if cur_status == 'A':
+                        RaidExt.new_raid_data[key]['state'] = 'active sync'
+                    elif cur_status == 'S':
+                        RaidExt.new_raid_data[key]['state'] = 'spare rebuilding'
                 elif cur_status == 'F':         # faulty
                     grade_2 = '2'
+                    RaidExt.new_raid_data[key]['state'] = 'faulty'
             elif is_in_sys:
                 grade_2 = '3'
+                RaidExt.new_raid_data[key]['state'] = 'removed'
             else:
                 grade_2 = '4'
+                RaidExt.new_raid_data[key]['state'] = 'removed'
         elif is_in_sys:
             grade_1 = '2'
             # checking cur disk has skip or not
@@ -240,6 +250,7 @@ def new_raid_refresh_status():
                 is_pre_disk_in_sys = True if pre_disk in sys_disk_list else False
                 if not is_pre_disk_in_sys:
                     grade_2 = '1'
+                    RaidExt.new_raid_data[key]['state'] = 'new device'
         else:
             grade_1 = '3'
 
@@ -248,6 +259,8 @@ def new_raid_refresh_status():
         # print device
         # print status
         # print '===================='
+    # update the scsi info
+    ret = new_update_scsi_num()
     return global_raid_data
 
 def new_raid_test():
@@ -314,6 +327,18 @@ def raid_disk_map():
             # print tmp_list
             if len(tmp_list) >= 2:
                 data[tmp_list[0][0:6]] = tmp_list[1]
+    return data
+
+def disk_raid_map():
+    data = {}
+    status, stdout, stderr = invoke_shell('ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9][0-9]"')
+    if status == 0:
+        # print stdout
+        for line in stdout.split("\n"):
+            tmp_list = line.split(' ')
+            # print tmp_list
+            if len(tmp_list) >= 2:
+                data[tmp_list[1]] = tmp_list[0][0:6]
     return data
 
 def system_disk_list():
@@ -436,7 +461,8 @@ def active_new_disk(dev_name):  # like 'disk_1'
                     # here, raise md0 XFS filesystem
                     ret = resize_raid_fs()
                     # here, update_scsi_num id
-                    ret = update_scsi_num(dev_name)
+                    # ret = update_scsi_num(dev_name)
+                    ret = new_update_scsi_num()
 
                     return True
                 else:
@@ -563,7 +589,8 @@ def add_spare_disk(dev_name):
         # here, resize the md0 XFS file system
         ret = resize_raid_fs()
         # here, update_scsi_num id
-        ret = update_scsi_num(dev_name)
+        # ret = update_scsi_num(dev_name)
+        ret = new_update_scsi_num()
         return True
     else:
         if stderr:
@@ -572,31 +599,22 @@ def add_spare_disk(dev_name):
 
 def stop_scsi_disk(dev_name):  # like: 'disk_1'
     global_raid_data = RaidExt.new_raid_data
-    cur_raid_key = ''
-    scsi_master = ''
-    scsi_id = ''
+    control_str = ''
     ret = False
-
-    num = dev_name[5]
-    if num in ['1', '2', '3', '4']:
-        scsi_master = '0'
-    else:
-        scsi_master = '1'
 
     for key in global_raid_data.keys():
         device = global_raid_data[key]['device']
         if device == dev_name:
-            scsi_id = global_raid_data[key]['scsi']
-            cur_raid_key = key
+            control_str = global_raid_data[key]['scsi']
             break
-    if scsi_id != '' and scsi_master != '':  # found
-        control_str = scsi_master + ' 0 ' + scsi_id + ' 0'
+    if control_str:
         shell = 'echo \"scsi remove-single-device '+ control_str +'\" > /proc/scsi/scsi'
         print shell
         sta, out, err = invoke_shell(shell)
-        sta = 0
         if sta == 0:
             ret = True
+    else:
+        raise RestfulError('580 Warnning: Not find valid scsi id, Maybe not stop the disk '+ dev_name)
     return ret
 
 def find_system_scsi_id_max(option = 0):  # option: 0 -> scsi0, 1 -> scsi1
@@ -658,6 +676,48 @@ def update_scsi_num(dev_name):
         return True
     return False
 
+def new_update_scsi_num():
+    global_raid_data = RaidExt.new_raid_data
+    sd_to_disk = disk_raid_map()  # item like: 'sdf1 disk_1'
+
+    # clear cur raid scsi info
+    for item in global_raid_data.keys():
+        global_raid_data[item]['scsi'] = ''
+
+    raid_base = raid_base_info()
+    device_info = raid_base['devices']
+    for dev in device_info:
+        status = dev['status']
+        tmp_list = status.split(" ")
+        disk_name = tmp_list[-1]
+        tmp_list = disk_name.split("/")
+        disk_name = tmp_list[-1]            # like: sdf1
+
+        major_id = dev['major']
+        minor_id = dev['minor']
+        dev_id_str = major_id + ':' + minor_id      # like: '8:81'
+
+        # find scsi id info
+        scsi_id_str = ''
+        devpath_info_cmd = 'udevadm info --query=all --path=/dev/block/'+ dev_id_str +' | grep DEVPATH'
+        status, stdout, stderr = invoke_shell(devpath_info_cmd, True)
+        if status == 0 and stdout:
+            tmp_list = stdout.split("/")
+            tmp_str = tmp_list[-4]
+            tmp_list = tmp_str.split(":")
+            scsi_id_str = ' '.join(tmp_list)
+
+        # set global_raid_data -> scsi flag
+        if scsi_id_str != '' and disk_name and sd_to_disk:
+            disk_key = sd_to_disk[disk_name] if disk_name in sd_to_disk.keys() else ''
+            if disk_key:
+                for key in global_raid_data.keys():
+                    dev_name = global_raid_data[key]['device']
+                    if dev_name == disk_key:
+                        RaidExt.new_raid_data[key]['scsi'] = scsi_id_str
+                        break
+    return True
+
 def resize_raid_fs():
     # check has started or not
     has_started = has_raid_started()
@@ -702,7 +762,7 @@ class ScsiMonitor():
             length = len(lines)
             for item in [1, 2, 3, 4]:
                 if item <= length:
-                    global_raid_data[str(item)]['scsi'] = str(item - 1)
+                    global_raid_data[str(item)]['scsi'] = '0 0 ' + str(item - 1) + ' 0'
         # init scsi1 devices
         status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi1 | awk \'{ print $6 }\' | cut -c2')
         if status == 0 and stdout:
@@ -710,7 +770,7 @@ class ScsiMonitor():
             length = len(lines)
             for item in [5, 6, 7, 8]:
                 if item <= length:
-                    global_raid_data[str(item)]['scsi'] = str(item - 1)
+                    global_raid_data[str(item)]['scsi'] = '1 0 ' + str(item - 1) + ' 0'
 
         json_data = json.dumps(RaidExt.new_raid_data, indent = 4)
         print json_data
@@ -736,41 +796,49 @@ class RaidExt:
         '1': {
             'device': 'disk_1',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '2': {
             'device': 'disk_2',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '3': {
             'device': 'disk_3',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '4': {
             'device': 'disk_4',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '5': {
             'device': 'disk_5',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '6': {
             'device': 'disk_6',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '7': {
             'device': 'disk_7',
             'status': '00',
+            'state': '',
             'scsi': ''
         },
         '8': {
             'device': 'disk_8',
             'status': '00',
+            'state': '',
             'scsi': ''
         }
     }

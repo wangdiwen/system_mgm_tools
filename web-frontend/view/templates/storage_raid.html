@@ -382,7 +382,7 @@ function new_raid_info() {
 
     if (ret_code) {
         var new_info = $$.parseJSON(raid_info);
-        var content = '<tr><td width="5%">盘位</td><td width="10%">设备名称</td><td width="15%">状态</td><td width="20%">操作 </td></tr>';
+        var content = '<tr><td width="5%">盘位</td><td width="10%">设备名称</td><td width="15%">State of RAID</td><td width="15%">状态</td><td width="20%">操作 </td></tr>';
         var _num = 0;
         if (new_info) {
             var is_hide = false;
@@ -390,7 +390,7 @@ function new_raid_info() {
                 is_hide = true;
             }
             for (var key in new_info) {
-                content += '<tr><td>' + key + '</td><td id="new_raid_device_' + _num + '">' + new_info[key]['device'] + '</td>';
+                content += '<tr><td>' + key + '</td><td id="new_raid_device_' + _num + '">' + new_info[key]['device'] + '</td><td>'+new_info[key]['state'] +'</td>';
 
                 // add operation button or not
                 var grade_1 = new_info[key]['status'].substr(0, 1);
@@ -650,21 +650,6 @@ $$(document).ready(function() {
           <th  colspan="6" align="left">阵列管理</th>
         </tr>
     </thead>
-
-    <tbody id="raid_spare_disk">
-    </tbody> -->
-
-
-    <!-- <tfoot>
-        <tr>
-          <td colspan="6" align="left">
-          Help: 移除损坏的磁盘设备
-          &nbsp;第一步：移除损坏设备；
-          &nbsp;第二步：手工更换硬盘；
-          &nbsp;第三步：激活新硬盘；
-          </td>
-        </tr>
-    </tfoot> -->
 
     <!-- <tfoot>
         <tr>
