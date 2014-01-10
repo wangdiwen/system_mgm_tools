@@ -72,6 +72,7 @@ sys_tool_list = {
     'traceroute': 'traceroute',
     'dmidecode': 'dmidecode.x86_64',
     'ethtool': 'ethtool',
+    'udevadm': 'udev libudev',
 }
 
 failed_tool = []
@@ -102,3 +103,6 @@ log('=========== Install failed tools =============')
 if failed_tool:
     for item in failed_tool:
         warning('failed ==> ' + item)
+else:
+    print 'Checking results ...'
+    log('Congratulations, All system tools has installed OK')
