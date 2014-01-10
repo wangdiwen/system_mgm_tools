@@ -291,7 +291,7 @@ elif param == 'delete':
 else:
     print 'Prepareing build raid now ...'
 
-quit(0, 'test...')
+# quit(0, 'test...')
 
 print 'Checking user ...'
 is_root = check_user()
