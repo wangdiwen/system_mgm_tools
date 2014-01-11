@@ -257,25 +257,13 @@ function raid_alarm() {
             raid_str = '阵列出现故障，已停止工作！';
             color = 'red';
         }
+        else if (alarm_info == '4') {   // degraded, resharping, rebuilding
+            raid_str = '阵列当前处于不稳定状态，数据正在同步 ... ' + progress_info;
+            color = 'yellow';
+        }
         else {                          // 没有报警，绿色
-            // checking cur raid is status, clean, degraded, resharping, rebuilding
-            var is_clean = true;
-            if (typeof json_data != 'undefined') {
-                var status = json_data['state'];            // cur state of raid
-                if (typeof status != 'undefined') {
-                    if (status != 'clean') {
-                        is_clean = false;
-                    }
-                }
-            }
-            if (is_clean) {         // blue
-                raid_str = '阵列工作正常';
-                color = 'blue';
-            }
-            else {                  // yellow
-                raid_str = '阵列当前处于不稳定状态，数据正在同步 ... ' + progress_info;
-                color = 'yellow';
-            }
+            raid_str = '阵列工作正常';
+            color = 'blue';
         }
 
         $$("#alarm_title").text(raid_str);
