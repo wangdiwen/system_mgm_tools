@@ -74,7 +74,7 @@ function raid_base_info() {
         if (json_data) {
             var dev_name = json_data['device name'];
             if (typeof dev_name != 'undefined') {
-                var soft_ver = json_data['version'];
+                // var soft_ver = json_data['version'];
                 var create_time = json_data['creation time'];
                 var raid_type = json_data['raid level'];
                 var all_volume = json_data['array size'];
@@ -83,7 +83,7 @@ function raid_base_info() {
 
                 var raid_str = "<tr>"+
                                 "<td>"+dev_name+"</td>"+
-                                "<td>"+soft_ver+"</td>"+
+                                // "<td>"+soft_ver+"</td>"+
                                 "<td>"+create_time+"</td>"+
                                 "<td>"+raid_type+"</td>"+
                                 "<td>"+all_volume+"</td>"+
@@ -102,6 +102,7 @@ function raid_other_info() {
     if (typeof json_data != "undefined") {
         var status = json_data['state'];
         if (typeof status != 'undefined') {
+            var soft_ver = json_data['version'];
             var used_volume = json_data['used dev size'];
             var raid_count = json_data['raid devices'];
             var persistence = json_data['persistence'];
@@ -112,6 +113,7 @@ function raid_other_info() {
             var events = json_data['events'];
 
             content = "<table> \
+                        <tr><td align=\"right\">软件版本：</td><td>"+ soft_ver +"</td></tr> \
                         <tr><td align=\"right\">单块磁盘有效容量：</td><td>"+ used_volume +"</td></tr> \
                         <tr><td align=\"right\">RAID数量：</td><td>"+ raid_count +"</td></tr> \
                         <tr><td align=\"right\">持久化状态：</td><td>"+ persistence +"</td></tr> \
@@ -584,13 +586,13 @@ $$(document).ready(function() {
 <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
     <thead>
         <tr>
-          <th  colspan="10" align="left">磁盘阵列 RAID</th>
+          <th  colspan="10" align="left">磁盘阵列</th>
         </tr>
     </thead>
 
     <tbody id="base_info">
         <tr>
-            <td width="5%">设备名称</td><td width="5%">软件版本</td><td width="10%">创建时间</td><td width="5%">阵列类型</td><td width="10%">总容量</td><td width="5%">磁盘数量</td><td width="10%">更新时间</td>
+            <td width="5%">设备名称</td><td width="10%">创建时间</td><td width="5%">阵列类型</td><td width="10%">总容量</td><td width="5%">磁盘数量</td><td width="10%">更新时间</td>
         </tr>
 
     </tbody>
@@ -605,7 +607,7 @@ $$(document).ready(function() {
 <br />
 
 <!-- <div id="alarm_title" class="tips" style="float:left; margin:5px auto; width: 100%; height: 50px; border: 1px solid red; background-color: #008000; font-size: 40px; font-weight:bold; text-align:left; ">Alarm Title</div> -->
-<div id="alarm_title" class="tips">Alarm Title</div>
+<div id="alarm_title" class="tips">阵列警报提醒</div>
 <!-- <div id="alarm_title_tips" class="tips">Alarm Title</div> -->
 <!-- <div id="alarm_title_warnning" class="warnning">Alarm Title</div> -->
 <!-- <div id="alarm_title_error" class="error">Alarm Title</div> -->
@@ -613,7 +615,7 @@ $$(document).ready(function() {
 <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="general_table">
     <thead>
         <tr>
-          <th  colspan="5" align="left">阵列管理新版界面</th>
+          <th  colspan="5" align="left">阵列管理</th>
         </tr>
     </thead>
 
