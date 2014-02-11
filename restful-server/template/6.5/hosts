@@ -1,0 +1,9 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+127.0.0.1   {{HOSTNAME}} {{HOSTNAME}}.localdomain localhost4 localhost4.localdomain4
+
+127.0.0.1   mmap5
+127.0.0.1 wowzalicense1.wowzamedia.com
+127.0.0.1 wowzalicense2.wowzamedia.com
+127.0.0.1 wowzalicense3.wowzamedia.com
+127.0.0.1 wowzalicense4.wowzamedia.com
