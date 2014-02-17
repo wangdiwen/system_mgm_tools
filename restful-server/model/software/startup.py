@@ -89,6 +89,8 @@ def apply_tmp_program(info):
     init_sh = '/opt/program/bin/'+app_name+'/.init'
     if os.path.isfile(init_sh):
         cmd = 'su - mmap -c \"' + init_sh + ' start\"'
+        if app_name == 'hvec':
+            cmd = 'bash ' + init_sh + ' > /dev/null 2>&1'
         status, stdout, stderr = invoke_shell(cmd, False)
         if status != None:
             return False
