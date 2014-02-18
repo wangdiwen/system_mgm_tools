@@ -154,6 +154,29 @@ def set_stop(info):
         raise RestfulError(msg)
     return True
 
+def set_restart(info):
+    app_name = info['name'] if 'name' in info.keys() else ''
+
+    if not app_name:
+        msg = '580 params is wrong, must give name item'
+        raise RestfulError(msg)
+
+    app_list = startup_app_list()
+    if not app_name in app_list:
+        msg = '580 has no such program [' + app_name + ']'
+        raise RestfulError(msg)
+
+    init_sh = '/opt/program/bin/' + app_name + '/.init'
+    if os.path.isfile(init_sh):
+        cmd = 'su - mmap -c \"' + init_sh + ' restart\"'
+        status, stdout, stderr = invoke_shell(cmd, False)
+        if status != None:
+            return False
+    else:
+        msg = '580 error: this application has no .init shell script'
+        raise RestfulError(msg)
+    return True
+
 ###############################################################################
 
 class Startup:
@@ -181,21 +204,26 @@ class StartupExt:
         pass
 
     def PUT(self, arg):
-        if not arg in ['apply', 'autostart', 'stop']:
+        if not arg in ['apply', 'autostart', 'stop', 'restart']:
             msg = '560 require path wrong'
             raise RestfulError(msg)
+        data = web.data() if web.data() else '{}'
 
         if arg == 'apply':
-            input = json.loads(web.data())
+            input = json.loads(data)
             ret = apply_tmp_program(input)
             return json.dumps(ret)
         elif arg == 'autostart':
-            input = json.loads(web.data())
+            input = json.loads(data)
             ret = set_autostart(input)
             return json.dumps(ret)
         elif arg == 'stop':
-            input = json.loads(web.data())
+            input = json.loads(data)
             ret = set_stop(input)
+            return json.dumps(ret)
+        elif arg == 'restart':
+            input = json.loads(data)
+            ret = set_restart(input)
             return json.dumps(ret)
         return
 
