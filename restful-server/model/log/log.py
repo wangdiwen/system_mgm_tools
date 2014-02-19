@@ -18,7 +18,7 @@ class RestLog():
         # log format
         # [2013-05-30 11:09:55] (10.1.89.101) HTTP/1.1 GET /network/adaptors/eth0/workmode -- <http-code> <error msg>
         web_env = web.ctx
-        cur_time = time.strftime('%Y-%m-%d %X', time.gmtime(time.time()))
+        cur_time = time.strftime('%Y-%m-%d %X', time.gmtime(time.time() + 8*60*60))     # time.time() is utc, +8 hours is shanghai timezone
         re_path = web_env['path']
         re_method = web_env['method']
         re_pro = web_env['protocol']

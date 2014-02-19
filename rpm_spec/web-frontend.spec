@@ -24,7 +24,7 @@ Prefix: /
 %define package_name		web-frontend
 
 %description
-This is web manager program for new base system. 
+This is web manager program for new base system.
 
 %prep
 #%setup
