@@ -120,15 +120,12 @@ fi
 %files
 %{install_path}
 
-%config %{log_path}/restful.log
+%config(noreplace) %{log_path}/restful.log
 #%config %{etc_path_conf}/restful-server
-%config %{conf_path}/global_meta_data.json
-#%config %{conf_path}/ntp_server
+%config(noreplace) %{conf_path}/global_meta_data.json
 %config %{conf_path}/rpm-secret-key
-%config %{conf_path}/startup
-#%config %{conf_path}/json_config
+%config(noreplace) %{conf_path}/startup
 #%config %{conf_path}/auth_user
-#%config %{conf_path}/install_log
 
 %defattr(-, root, root)
 
