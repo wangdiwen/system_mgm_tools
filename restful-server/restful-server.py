@@ -230,9 +230,9 @@ if __name__ == "__main__":
     init_meta_data()
 
     # deamon thread task, settings time is 15s
-    # thread_lock = threading.Lock()
-    # logclear_process = LogClear(thread_lock, 'clear-log-disk')
-    # logclear_process.start()
+    thread_lock = threading.Lock()
+    logclear_process = LogClear(thread_lock, 'clear-log-disk')
+    logclear_process.start()
 
     # monitor the raid device status
     # raid_thread_lock = threading.Lock()
