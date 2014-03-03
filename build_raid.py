@@ -197,11 +197,14 @@ def check_disk_volume(sys_disk_list):  # return number: 500, 1000 ...
     disk_vol = '500'
     vol_list = []
     for disk in sys_disk_list:  # disk like: disk_1/disk_2
-        cmd = 'parted -s /dev/'+ disk +' print | grep "^Disk" | awk \'{ print $3 }\''
+        # cmd = 'parted -s /dev/'+ disk +' print | grep "^Disk" | awk \'{ print $3 }\''
+        cmd = 'fdisk -l /dev/disk_1 | grep "^Disk" | head -1 | awk \'{ print $3 }\''
         sta, out, err = shell_cmd(cmd)
         if sta == 0 and out:
-            disk_vol = out.strip()
-            disk_vol = disk_vol[0:-2]
+            tmp_str = out.strip()
+            tmp_list = tmp_str.split('.')
+            disk_vol = tmp_list[0]
+            # disk_vol = disk_vol[0:-2]
             log(disk + ' ==> ' + disk_vol)
             vol_list.append(int(disk_vol))
     # get the minor invalid volume

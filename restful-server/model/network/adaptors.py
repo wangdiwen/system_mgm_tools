@@ -483,13 +483,24 @@ def set_device_mode(info):
     # get speed number
     duplex = duplex.lower()
     speed = speed.replace('Mb/s', '')
+
     # set the work mode of adaptor
-    cmd = 'ethtool -s ' + device + ' speed ' + speed + ' duplex ' + duplex + ' autoneg ' + negotiation
+    # here, revise auto negotiation problem
+    # when auto negotiation is 'on', ignore the 'speed' and 'duplex' params
+    cmd = ''
+    config_str = ''
+    if negotiation == 'on':
+        cmd = 'ethtool -s autoneg ' + negotiation
+        config_str = 'autoneg '+ negotiation
+    else:
+        cmd = 'ethtool -s ' + device + ' speed ' + speed + ' duplex ' + duplex + ' autoneg ' + negotiation
+        config_str = 'speed ' + speed + ' duplex ' + duplex +' autoneg '+ negotiation
+
     # print cmd
     status, stdout, stderr = invoke_shell(cmd)
     if status == 0:
         meta = get_meta_data()
-        meta['network']['adaptors'][device]['ETHTOOL_OPTS'] = 'speed '+speed+' duplex '+duplex+' autoneg '+negotiation
+        meta['network']['adaptors'][device]['ETHTOOL_OPTS'] = config_str
         ret = set_meta_data(meta)
         if ret:
             temp_conf = template_name('ifcfg-ethx')
