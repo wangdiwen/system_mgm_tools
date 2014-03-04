@@ -165,14 +165,19 @@ def alarm_info():
         return data
     # checking disk faulty
     raid_info = raid_base_info()
+    state = raid_info['state'].strip()
     if 'failed devices' in raid_info.keys() \
-        and raid_info['failed devices'] != '0' \
-        and re.compile('recovering').match(raid_info['state']):
-        data = '1'
-    else:           # check state of 'degraded', reshaping, rebuilding
-        state = raid_info['state'].strip()
-        if state != 'clean':
+        and raid_info['failed devices'] != '0':
+        if re.compile('.*recovering.*').match(state) \
+            or re.compile('.*reshaping.*').match(state) \
+            or re.compile('.*rebuilding.*').match(state):
             data = '4'
+        else:
+            if state == 'clean, degraded':
+                data = '1'
+    else:
+        if state == 'clean' or state == 'clean, degraded':
+            data = '1'
 
     # checking has force removed disk, this situation is most important
     force_removed_disk_list = get_force_removed()
@@ -361,8 +366,7 @@ def remove_faulty_dev(dev_name):  # disk_1
     raid_status = raid_base_info()
     cur_status = raid_status['state']
     if re.compile('.*recovering.*').match(cur_status) \
-        or re.compile('.*reshaping.*').match(cur_status) \
-        or re.compile('.*degraded.*').match(cur_status):
+        or re.compile('.*reshaping.*').match(cur_status):
         raise RestfulError('580 Warnning: Raid is rebuilding, cannot force remove disk')
         return False
 

@@ -286,17 +286,17 @@ function raid_alarm() {
         $$("#alarm_title_text").text(raid_str);
         // alert(color)
         if (color == 'red') {
-            // $$('#alarm_title').removeClass();
+            $$('#alarm_title').removeClass();
             // $$('#alarm_title').addClass('error');
             $$('#alarm_title').addClass('in_info');
         }
         else if (color == 'yellow') {
-            // $$('#alarm_title').removeClass();
+            $$('#alarm_title').removeClass();
             // $$('#alarm_title').addClass('warnning');
             $$('#alarm_title').addClass('yellow');
         }
         else if (color == 'blue') {
-            // $$('#alarm_title').removeClass();
+            $$('#alarm_title').removeClass();
             // $$('#alarm_title').addClass('tips');
             $$('#alarm_title').addClass('green');
         }
@@ -432,7 +432,7 @@ function new_raid_info() {
                     }
                     else if (grade_2 == '2') {
                         content += '<td class="tab_border">损坏</td>';
-                        content += is_hide ? '<td class="tab_border"></td>' : '<td class="tab_border"><input type="button" class="new_raid" id="new_raid_remove" value="移除" onclick="new_remove_device_ask('+ _num +');"></input></td>';
+                        content += '<td class="tab_border"><input type="button" class="new_raid" id="new_raid_remove" value="移除" onclick="new_remove_device_ask('+ _num +');"></input></td>';
                     }
                     else if (grade_2 == '3') {
                         content += '<td class="tab_border">已被移除</td><td class="tab_border"><input type="button" class="new_raid" id="new_raid_active" value="激活" onclick="new_active_device_ask('+ _num +');"></input></td>';
