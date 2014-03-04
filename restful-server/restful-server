@@ -33,7 +33,7 @@ start() {
         #statements
         if [ -n $item ]; then
             echo "stop other md device $item ..."
-            mdadm -S $item > /dev/null 2>&1
+            mdadm -S /dev/$item > /dev/null 2>&1
         fi
     done
 
