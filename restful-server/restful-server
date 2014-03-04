@@ -44,7 +44,7 @@ start() {
         mdadm -As
         [ "$?" == "0" ] && { echo "starting success"; }
     else
-        echo "RAID is running, no need to starting ..."
+        echo "RAID is running, no need to start ..."
     fi
 
 	echo -n $"Starting $KIND services: "
