@@ -166,18 +166,15 @@ def alarm_info():
     # checking disk faulty
     raid_info = raid_base_info()
     state = raid_info['state'].strip()
+
     if 'failed devices' in raid_info.keys() \
         and raid_info['failed devices'] != '0':
+        data = '1'
+    else:
         if re.compile('.*recovering.*').match(state) \
             or re.compile('.*reshaping.*').match(state) \
             or re.compile('.*rebuilding.*').match(state):
             data = '4'
-        else:
-            if state == 'clean, degraded':
-                data = '1'
-    else:
-        if state == 'clean' or state == 'clean, degraded':
-            data = '1'
 
     # checking has force removed disk, this situation is most important
     force_removed_disk_list = get_force_removed()
