@@ -582,10 +582,10 @@ def add_spare_disk(dev_name):
             }
             run_file = '/etc/mdadm.conf'
             ret_render = engine_render_template(temp_conf, map_dict, run_file)
-            ret_sync = sync_run_config_file(run_file)
             if ret_render:
                 shell_add = 'mdadm -Ds >> /etc/mdadm.conf'
                 sta, out, err = invoke_shell(shell_add)
+            ret_sync = sync_run_config_file(run_file)
 
         # here, resize the md0 XFS file system
         ret = resize_raid_fs()
