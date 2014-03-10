@@ -37,7 +37,7 @@ start() {
         fi
     done
 
-    sleep 2
+    sleep 1
 
     num=`cat /proc/mdstat | grep md0 | wc -l`
     if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then

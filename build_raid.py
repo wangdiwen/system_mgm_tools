@@ -269,6 +269,11 @@ def delete_raid():
     if status == 0:
         tips('success')
 
+    # clean persistence config file
+    status = shell_cmd('rm -f /opt/system/etc/mdadm.conf', True, 1)
+    if status == 0:
+        tips('clean /opt/system/etc/mdadm.conf ok')
+
     quit(1, 'bye ...')
 ###############################################################################
 ###############################################################################
