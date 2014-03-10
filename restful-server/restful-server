@@ -28,24 +28,24 @@ RETVAL=0
 start() {
         KIND="restful-server"
 
-    echo -n $"Starting RAID services ..."
-    for $item in `cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
-        #statements
-        if [ -n $item ]; then
-            echo "stop other md device $item ..."
-            mdadm -S /dev/$item > /dev/null 2>&1
-        fi
-    done
+  echo -n $"Starting RAID services ..."
+  for $item in `cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
+      #statements
+      if [ -n $item ]; then
+          echo "stop other md device $item ..."
+          mdadm -S /dev/$item > /dev/null 2>&1
+      fi
+  done
 
-    sleep 1
+  sleep 1
 
-    num=`cat /proc/mdstat | grep md0 | wc -l`
-    if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then
-        mdadm -As
-        [ "$?" == "0" ] && { echo "starting success"; }
-    else
-        echo "RAID is running, no need to start ..."
-    fi
+  num=`cat /proc/mdstat | grep md0 | wc -l`
+  if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then
+      mdadm -As
+      [ "$?" == "0" ] && { echo "starting success"; }
+  else
+      echo "RAID is running, no need to start ..."
+  fi
 
 	echo -n $"Starting $KIND services: "
 	cd /usr/local/restful-server
