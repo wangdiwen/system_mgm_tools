@@ -171,9 +171,11 @@ def alarm_info():
         and raid_info['failed devices'] != '0':
         data = '1'
     else:
-        if re.compile('.*recovering.*').match(state) \
-            or re.compile('.*reshaping.*').match(state) \
-            or re.compile('.*rebuilding.*').match(state):
+        if state == 'clean, FAILED':  # here, removed or bad 2 disk, raid maybe not working when restart
+            data = '1'
+        elif re.compile('.*recovering.*').match(state) \
+                or re.compile('.*reshaping.*').match(state) \
+                or re.compile('.*rebuilding.*').match(state):
             data = '4'
 
     # checking has force removed disk, this situation is most important
@@ -459,12 +461,11 @@ def active_new_disk(dev_name):  # like 'disk_1'
                         shell_add = 'mdadm -Ds >> /etc/mdadm.conf'
                         sta, out, err = invoke_shell(shell_add)
 
-                    # here, raise md0 XFS filesystem
-                    ret = resize_raid_fs()
                     # here, update_scsi_num id
                     # ret = update_scsi_num(dev_name)
                     ret = new_update_scsi_num()
-
+                    # here, raise md0 XFS filesystem
+                    ret = resize_raid_fs()
                     return True
                 else:
                     # print out.strip()
@@ -587,11 +588,11 @@ def add_spare_disk(dev_name):
                 sta, out, err = invoke_shell(shell_add)
             ret_sync = sync_run_config_file(run_file)
 
-        # here, resize the md0 XFS file system
-        ret = resize_raid_fs()
         # here, update_scsi_num id
         # ret = update_scsi_num(dev_name)
         ret = new_update_scsi_num()
+        # here, resize the md0 XFS file system
+        ret = resize_raid_fs()
         return True
     else:
         if stderr:
@@ -726,8 +727,8 @@ def resize_raid_fs():
         raise RestfulError('580 Error: Raid has not started !')
 
     status, stdout, stderr = invoke_shell('xfs_growfs /dev/md0', True)
-    if stderr:
-        raise RestfulError('580 Warnning: You can ignore this alarm ! ' + stderr.strip().replace("\n", ' '))
+    # if stderr:
+    #     raise RestfulError('580 Warnning: You can ignore this alarm ! ' + stderr.strip().replace("\n", ' '))
     if status == 0:
         return True
     return False
