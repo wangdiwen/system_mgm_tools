@@ -5,7 +5,7 @@
 Summary: Restful Server Program
 Name: restful-server
 Version: 1.3
-Release: 9.el6
+Release: 10.el6
 License: GPL
 Group: Application/System
 Vendor: Vmediax.com

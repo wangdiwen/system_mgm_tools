@@ -29,7 +29,7 @@ start() {
         KIND="restful-server"
 
   echo -n $"Starting RAID services ..."
-  for $item in `cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
+  for item in `cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
       #statements
       if [ -n $item ]; then
           echo "stop other md device $item ..."
