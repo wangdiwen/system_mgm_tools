@@ -17,10 +17,10 @@ fi
 unset TMPDIR
 
 # Source networking configuration.
-. /etc/sysconfig/network
+# . /etc/sysconfig/network
 
 # Check that networking is up.
-[ ${NETWORKING} = "no" ] && exit 1
+# [ ${NETWORKING} = "no" ] && exit 1
 
 RETVAL=0
 [ -x /usr/local/restful-server/restful-server.py ] || exit 2
