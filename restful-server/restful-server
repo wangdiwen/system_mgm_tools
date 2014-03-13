@@ -28,12 +28,12 @@ RETVAL=0
 start() {
         KIND="restful-server"
 
-  echo -n $"Starting RAID services ..."
+  echo "Starting RAID services ..."
   for item in `cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
       #statements
       if [ -n $item ]; then
           echo "stop other md device $item ..."
-          mdadm -S /dev/$item > /dev/null 2>&1
+          mdadm -S /dev/$item > /dev/null 2>&1 &
       fi
   done
 
@@ -41,16 +41,22 @@ start() {
 
   num=`cat /proc/mdstat | grep md0 | wc -l`
   if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then
-      mdadm -As
+      mdadm -As &
       [ "$?" == "0" ] && { echo "starting success"; }
   else
       echo "RAID is running, no need to start ..."
   fi
 
 	echo -n $"Starting $KIND services: "
-	cd /usr/local/restful-server
+	# cd /usr/local/restful-server
 	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
 	RETVAL=$?
+  ps -ef | grep restful | grep -v grep
+  if [ "$?" == "0" ]; then
+    echo "success"
+  else
+    echo "failed"
+  fi
 	echo
 	return $RETVAL
 }
