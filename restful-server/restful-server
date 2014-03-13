@@ -56,7 +56,6 @@ start() {
     echo "success"
   else
     echo "failed"
-  fi
 	echo
 	return $RETVAL
 }
