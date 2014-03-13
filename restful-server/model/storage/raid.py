@@ -498,7 +498,7 @@ def check_new_disk_vol(dev_name):
         raise RestfulError('580 Error: deadly error, cannot find valid first disk partition, in check_new_disk_vol() function !!')
     other_child_disk_name = cur_raid_disk_list[0]  # get default other list ones
 
-    status, stdout, stderr = invoke_shell('parted -s /dev/'+ other_child_disk_name +' print | grep "^[ 0-9]" | awk \'{ print $4 }\'')
+    status, stdout, stderr = invoke_shell('parted -s /dev/'+ other_child_disk_name[0:6] +' print | grep "^[ 0-9]" | awk \'{ print $4 }\'')
     if status == 0 and stdout:
         cur_vol = stdout.strip()
         cur_vol = cur_vol[0:-2]
