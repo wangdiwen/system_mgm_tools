@@ -48,7 +48,7 @@ start() {
   fi
 
 	echo -n $"Starting $KIND services: "
-	# cd /usr/local/restful-server
+	cd /usr/local/restful-server
 	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
 	RETVAL=$?
   ps -ef | grep restful | grep -v grep
@@ -56,6 +56,7 @@ start() {
     echo "success"
   else
     echo "failed"
+  fi
 	echo
 	return $RETVAL
 }
