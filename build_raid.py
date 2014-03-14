@@ -380,6 +380,9 @@ if sys_disk:
         if stdout or stderr:
             print stdout
             print stderr
+        if status != 0:
+            error('YUM error: install XFS tools failed')
+            quit(1, 'quit ...')
 
     # check disk volume
     invalid_vol = check_disk_volume(sys_disk)

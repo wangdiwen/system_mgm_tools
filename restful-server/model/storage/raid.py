@@ -414,8 +414,14 @@ def active_new_disk(dev_name):  # like 'disk_1'
         raise RestfulError('580 Error: New disk volume is too lower, cannot support')
         return False
 
+    # checking parted tool process
+    status, stdout, stderr = invoke_shell('ps -ef | grep parted | grep -v grep')
+    if status != 0:  # has process id
+        # find pid and kill them all
+        status, stdout, stderr = invoke_shell('ps -ef | grep parted | grep -v grep | awk \'{ print $2 }\' | xargs kill -9')
+
     # 1, clear old partition info
-    clear_partion_cmd = 'parted -s /dev/' + dev_name + ' mklabel msdos'
+    clear_partion_cmd = 'parted -s /dev/' + dev_name + ' mklabel msdos &'
     print clear_partion_cmd
     status, stdout, stderr = invoke_shell(clear_partion_cmd)
     if status == 0:
@@ -427,6 +433,11 @@ def active_new_disk(dev_name):  # like 'disk_1'
         status, stdout, stderr = invoke_shell(new_part_cmd)
         if status == 0:
             time.sleep(1)
+            # checking mkfs.xfs tool has exist ?\
+            status, stdout, stderr = invoke_shell('which mkfs.xfs')
+            if status != 0:
+                raise RestfulError('580 Error: system has no mkfs.xfs tool 1')
+
             # 3, format the new partition
             for_cmd = 'mkfs.xfs -f /dev/' + dev_name + '1 &'
             status, stdout, stderr = invoke_shell(for_cmd)
@@ -537,6 +548,12 @@ def add_spare_disk(dev_name):
         raise RestfulError('580 Error: New disk volume is too lower, cannot support')
         return False
 
+    # checking parted tool process
+    status, stdout, stderr = invoke_shell('ps -ef | grep parted | grep -v grep')
+    if status != 0:  # has process id
+        # find pid and kill them all
+        status, stdout, stderr = invoke_shell('ps -ef | grep parted | grep -v grep | awk \'{ print $2 }\' | xargs kill -9')
+
     # 1, clear old partition info
     status, stdout, stderr = invoke_shell('parted -s /dev/' + dev_name + ' mklabel msdos')
     if status == 0:
@@ -546,8 +563,13 @@ def add_spare_disk(dev_name):
         status, stdout, stderr = invoke_shell('parted -s /dev/'+ dev_name +' mkpart primary 0 ' + disk_volume)
         if status == 0:
             time.sleep(1)
+            # checking mkfs.xfs tool has exist ?\
+            status, stdout, stderr = invoke_shell('which mkfs.xfs')
+            if status != 0:
+                raise RestfulError('580 Error: system has no mkfs.xfs tool 1')
+
             # 3, format the new partition
-            for_cmd = 'mkfs.xfs -f /dev/' + dev_name + '1'
+            for_cmd = 'mkfs.xfs -f /dev/' + dev_name + '1 &'
             status, stdout, stderr = invoke_shell(for_cmd)
             time.sleep(1)
             if status == 0:
