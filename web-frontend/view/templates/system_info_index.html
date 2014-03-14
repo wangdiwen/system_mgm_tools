@@ -39,7 +39,7 @@ function display_info(json)
         setTimeout(display_info, parseInt($$("#flush").val()));
         return;
     }
-    
+
     $$("#info_table > tr[rel=info]").remove();
     if (typeof data["hostname"] != "undefined")
     {
@@ -56,7 +56,7 @@ function display_info(json)
             append_to_table("#info_table", "&nbsp;", value);
         }
     }
-    
+
     if (typeof data["kernel"] != "undefined")
     {
         var value = data["kernel"]['name'];
@@ -68,7 +68,7 @@ function display_info(json)
             append_to_table("#info_table", "&nbsp;", value);
         }
     }
-    
+
     if (typeof data["issue"] != "undefined")
     {
         var value = data["issue"]['name'];
@@ -80,7 +80,7 @@ function display_info(json)
             append_to_table("#info_table", "&nbsp;", value);
         }
     }
-    
+
     if (typeof data["base_board"] != "undefined")
     {
         var value = data["base_board"]['name'];
@@ -92,7 +92,7 @@ function display_info(json)
             append_to_table("#info_table", "&nbsp;", value);
         }
     }
-    
+
     if (typeof data["video_adaptor"] != "undefined")
     {
         var value = data["video_adaptor"]['name'];
@@ -104,7 +104,7 @@ function display_info(json)
             append_to_table("#info_table", "&nbsp;", value);
         }
     }
-    
+
     if (typeof data["uptime"] != "undefined")
     {
         var value = data["uptime"]["day"] + "天" + data["uptime"]["hour"] + "小时"
@@ -127,19 +127,26 @@ function display_info(json)
         var value = data["date"];
         append_to_table("#info_table", "系统时间", value);
     }
-    
+
     if (typeof data["restful-server"] != "undefined")
     {
         var value = data["restful-server"];
         append_to_table("#info_table", "Restful服务版本", value);
     }
-    
+
     if (typeof data["web-frontend"] != "undefined")
     {
         var value = data["web-frontend"];
         append_to_table("#info_table", "Web管理后端版本", value);
     }
-    
+
+    if (typeof data['sys_verion'] != 'undefined') {
+        append_to_table['#info_table', '系统版本', data['sys_verion']];
+    }
+    if (typeof data['build_time'] != 'undefined') {
+        append_to_table['#info_table', '构建日期', data['build_time']];
+    }
+
     setTimeout(display_info, parseInt($$("#flush").val()));
 }
 
@@ -148,7 +155,7 @@ function display_info(json)
 $$(document).ready(function() {
     display_info();
     setTimeout(display_info, parseInt($$("#flush").val()));
-    
+
     var data;
     var ret = restful_ajax({url:"/model/system/startup-mode", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
     {
@@ -163,17 +170,17 @@ $$(document).ready(function() {
         var map = { "release":"发布模式", "develop": "开发模式"}
         $$("#current_mode").html(map[data["startup-mode"]]);
     }
-    
-    
+
+
     $$("#model_dialog" ).dialog({autoOpen: false, modal: true, width:300});
-    
+
     $$("#modify").click(function()
     {
         var mode_html = $$("#current_mode").html()
         var map = { "发布模式":"release", "开发模式": "develop"}
         $$("#mode").val(map[mode_html]);
         $$("#model_dialog" ).dialog("open");
-        
+
     });
     $$("#modify_submit").click(function()
     {
@@ -196,10 +203,10 @@ $$(document).ready(function() {
                         alert("重启成功！")
                     }});
                 }
-                
+
             }});
     });
-    
+
 });
 </script>
 

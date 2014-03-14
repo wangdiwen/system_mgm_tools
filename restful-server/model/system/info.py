@@ -202,6 +202,8 @@ class SystemInfo:
             old_version['cpu'] = ''
             old_version['base_board'] = ''
             old_version['video_adaptor'] = ''
+            old_version['sys_verion'] = ''
+            old_version['build_time'] = ''
 
         new_version = get_new_version()
 
@@ -236,6 +238,8 @@ class SystemInfo:
         mgmt_version = get_mamttools_version()
         info['restful-server'] = mgmt_version['restful-server']
         info['web-frontend'] = mgmt_version['web-frontend']
+        info['sys_verion'] = old_version['sys_verion']
+        info['build_time'] = old_version['build_time']
 
         return json.dumps(info)
 
