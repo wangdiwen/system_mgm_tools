@@ -140,8 +140,8 @@ function display_info(json)
         append_to_table("#info_table", "Web管理后端版本", value);
     }
 
-    if (typeof data['sys_verion'] != 'undefined') {
-        append_to_table['#info_table', '系统版本', data['sys_verion']];
+    if (typeof data['sys_version'] != 'undefined') {
+        append_to_table['#info_table', '系统版本', data['sys_version']];
     }
     if (typeof data['build_time'] != 'undefined') {
         append_to_table['#info_table', '构建日期', data['build_time']];
