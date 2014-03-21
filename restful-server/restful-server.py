@@ -229,7 +229,8 @@ if __name__ == "__main__":
 
     # check sys version
     global_data = GlobalData()
-    root_path = os.getcwd()
+    # root_path = os.getcwd()
+    root_path = '/usr/local/restful-server'
     global_data.set_restful_root(root_path)
     global_data.set_template_path()
 

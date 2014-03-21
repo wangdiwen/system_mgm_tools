@@ -490,13 +490,13 @@ def set_device_mode(info):
     cmd = ''
     config_str = ''
     if negotiation == 'on':
-        cmd = 'ethtool -s autoneg ' + negotiation
+        cmd = 'ethtool -s ' + device + ' autoneg ' + negotiation
         config_str = 'autoneg '+ negotiation
     else:
         cmd = 'ethtool -s ' + device + ' speed ' + speed + ' duplex ' + duplex + ' autoneg ' + negotiation
         config_str = 'speed ' + speed + ' duplex ' + duplex +' autoneg '+ negotiation
 
-    # print cmd
+    print cmd
     status, stdout, stderr = invoke_shell(cmd)
     if status == 0:
         meta = get_meta_data()
