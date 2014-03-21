@@ -33,11 +33,9 @@ start() {
       #statements
       if [ -n $item ]; then
           echo "stop other md device $item ..."
-          mdadm -S /dev/$item > /dev/null 2>&1 &
+          mdadm -S /dev/$item 2>&1 &
       fi
   done
-
-  sleep 1
 
   num=`cat /proc/mdstat | grep md0 | wc -l`
   if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then
@@ -50,12 +48,13 @@ start() {
 	echo -n $"Starting $KIND services: "
 	cd /usr/local/restful-server
 	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
+  sleep 5  # by diwen, restful demon will be delay
 	RETVAL=$?
   ps -ef | grep restful | grep -v grep
   if [ "$?" == "0" ]; then
-    echo "success"
+    echo "restful status => success"
   else
-    echo "failed"
+    echo "restful status => failed"
   fi
 	echo
 	return $RETVAL

@@ -93,11 +93,10 @@ def crawler_sys_meta():
     meta['system']['ntp-server'] = {}
     meta['system']['ntp-server']['status'] = 'on'
     meta['system']['ntp-server']['ntp'] = []
-    meta['system']['ntp-server']['ntp'].append('202.120.2.101')
-    meta['system']['ntp-server']['ntp'].append('203.117.180.36')
-    meta['system']['ntp-server']['ntp'].append('64.236.96.53')
+    meta['system']['ntp-server']['ntp'].append('1.cn.pool.ntp.org')
     meta['system']['ntp-server']['ntp'].append('130.149.17.21')
-    meta['system']['ntp-server']['ntp'].append('129.7.1.66')
+    meta['system']['ntp-server']['ntp'].append('2.asia.pool.ntp.org')
+    meta['system']['ntp-server']['ntp'].append('3.asia.pool.ntp.org')
 
     # 9. others
     meta['extend'] = {}

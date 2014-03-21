@@ -19,14 +19,12 @@ urls = (
 ###############################################################################
 
 def has_raid_started():
-    shell = 'cat /proc/mdstat'
+    started = False
+    shell = 'mdadm -D /dev/md0'
     status, stdout, stderr = invoke_shell(shell)
-    rule = re.compile('^md0')
     if status == 0:
-        for item in stdout.split("\n"):
-            if rule.match(item):
-                return True
-    return False
+        started = True
+    return started
 
 def available_system_disk():
     data = []
@@ -57,7 +55,7 @@ def raid_base_info():
     cmd = 'mdadm -D ' + dev
     status, stdout, stderr = invoke_shell(cmd)
     if status == 0:
-        list = []
+        list_all = []
         for line in stdout.split("\n"):
             if line:
                 if re.compile("^[0-9]+").match(line.strip()):
@@ -74,14 +72,14 @@ def raid_base_info():
                         tmp_dict['status'] = string.join(items[4:len_item])
                     else:
                         tmp_dict['status'] = items[4]
-                    list.append(tmp_dict)
+                    list_all.append(tmp_dict)
                 else:
                     tmp_list = line.split(" : ")
                     length = len(tmp_list)
                     if length == 2:
                         # print tmp_list[0].strip().lower()
                         data[tmp_list[0].strip().lower()] = tmp_list[1].strip()
-        data['devices'] = list
+        data['devices'] = list_all
     if data:
         data['device name'] = dev
         # 'chunk size' and 'layout' and 'used dev size'
@@ -165,6 +163,9 @@ def alarm_info():
         return data
     # checking disk faulty
     raid_info = raid_base_info()
+    if not raid_info:  # {}, md0 not start
+        return False
+
     state = raid_info['state'].strip()
 
     if 'failed devices' in raid_info.keys() \
@@ -172,7 +173,7 @@ def alarm_info():
         data = '1'
     else:
         if state == 'clean, FAILED':  # here, removed or bad 2 disk, raid maybe not working when restart
-            data = '1'
+            data = '5'
         elif re.compile('.*recovering.*').match(state) \
                 or re.compile('.*reshaping.*').match(state) \
                 or re.compile('.*rebuilding.*').match(state):
@@ -363,6 +364,10 @@ def remove_faulty_dev(dev_name):  # disk_1
 
     # checking cur raid status, if status is recovering, not add new disk to raid
     raid_status = raid_base_info()
+    if not raid_status:  # {}, md0 not start
+        raise RestfulError('580 Warnning: Raid maybe not started !')
+        return False
+
     cur_status = raid_status['state']
     if re.compile('.*recovering.*').match(cur_status) \
         or re.compile('.*reshaping.*').match(cur_status):
@@ -537,6 +542,10 @@ def add_spare_disk(dev_name):
 
     # checking cur raid status, if status is recovering, not add new disk to raid
     raid_status = raid_base_info()
+    if not raid_status:  # {}, md0 not start
+        raise RestfulError('580 Warnning: RAID maybe not started !')
+        return False
+
     cur_status = raid_status['state']
     if re.compile('.*recovering.*').match(cur_status) or re.compile('.*reshaping.*').match(cur_status):
         raise RestfulError('580 Warnning: Raid is rebuilding, cannot add new disk')
@@ -709,6 +718,9 @@ def new_update_scsi_num():
         global_raid_data[item]['scsi'] = ''
 
     raid_base = raid_base_info()
+    if not raid_base:  # {}, md0 not start
+        return False
+
     device_info = raid_base['devices']
     for dev in device_info:
         status = dev['status']

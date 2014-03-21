@@ -271,12 +271,16 @@ function raid_alarm() {
             color = 'yellow';
         }
         else if (alarm_info == '3') {   // 阵列停止工作，红色
-            raid_str = '阵列损坏';
-            color = 'red';
+            raid_str = '无阵列运行';
+            color = 'blue';
         }
         else if (alarm_info == '4') {   // degraded, resharping, rebuilding
             raid_str = '数据同步中，请勿移除磁盘！  已完成 ' + progress_info;
             color = 'yellow';
+        }
+        else if (alarm_info == '5') {  // 2 disk fault
+            raid_str = '阵列损坏';
+            color = 'red';
         }
         else {                          // 没有报警，绿色
             raid_str = '阵列运行正常';

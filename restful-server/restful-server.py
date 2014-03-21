@@ -170,15 +170,25 @@ def ntp_sync():
         status = ntp_info['status']
         server_list = ntp_info['ntp']
         if status == 'on':
-            if len(server_list) > 0:
+            # check network, has connect to internet
+            # '1.cn.pool.ntp.org' is china ntp server center
+            status, stdout, stderr = invoke_shell('ping -c 1 -i 0.5 -w 1 -I eth0 1.cn.pool.ntp.org')
+            # print stdout
+            if status == 0 and len(server_list) > 0:
                 for addr in server_list:
-                    cmd = 'ntpdate ' + addr
-                    sta, out, err = invoke_shell(cmd)
+                    print 'sync time from : ' + addr + ' ...'
+                    sta, out, err = invoke_shell('ntpdate ' + addr)
                     if sta == 0:
+                        print 'sync time from ' + addr + ' success'
+                        # put the system time to CMOS
+                        print 'record the system to CMOS ...'
+                        sta, out, err = invoke_shell('clock -w')
+                        if sta == 0:
+                            print 'record the sys to CMOS, success'
                         break
                     else:
                         continue
-    return
+    return True
 
 def auth_processor(handler):
     path = web.ctx.path

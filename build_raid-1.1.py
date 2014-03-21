@@ -226,20 +226,40 @@ def usage_help():
 ###############################################################################
 def start_raid():
     print 'start raid device ...'
-    status = shell_cmd('mdadm -As', True, 1)
+    status = shell_cmd('cat /proc/mdstat | grep md0', True, 1)
     if status == 0:
-        tips('success')
+        tips('md0 has aleady started ...')
     else:
-        tips('failed')
+        status = shell_cmd('mdadm -As', True, 1)
+        if status == 0:
+            tips('success')
+        else:
+            tips('failed')
     quit(0, 'bye ...')
 
 def stop_raid():
     print 'stop raid device ...'
-    status = shell_cmd('mdadm -Ss', True, 1)
-    if status == 0:
-        tips('success')
+    print 'checking raid mount ...'
+    out = shell_cmd('df -h | grep md0 | awk \'{ print $6 }\'', True, 2)
+    if out:
+        mounted_point = out.strip()
+        print 'umount ' + mounted_point + ' ...'
+        status = shell_cmd('umount ' + mounted_point, True, 1)
+        if status == 0:
+            tips('ok')
+        else:
+            error('cannot umount ' + mounted_point)
+            quit(1, 'quit')
+
+    status = shell_cmd('cat /proc/mdstat | grep md0', True, 1)
+    if status != 0:
+        tips('md0 is not start, nothing to stop ...')
     else:
-        tips('failed')
+        status = shell_cmd('mdadm -Ss', True, 1)
+        if status == 0:
+            tips('success')
+        else:
+            tips('failed')
     quit(0, 'bye ...')
 
 def delete_raid():
@@ -251,11 +271,36 @@ def delete_raid():
         status = shell_cmd('umount ' + mounted_point, True, 1)
         if status == 0:
             tips('ok')
+        else:
+            error('cannot umount ' + mounted_point)
+            quit(1, 'quit')
 
-    print 'try to stop the raid device ...'
-    status = shell_cmd('mdadm -Ss', True, 1)
-    if status == 0:
-        tips('ok')
+    status = shell_cmd('cat /proc/mdstat | grep md0', True, 1)
+    if status != 0:
+        tips('md0 is not start, nothing to stop ...')
+    else:
+        print 'try to stop the raid device ...'
+        status = shell_cmd('mdadm -S /dev/md0', True, 1)
+        if status == 0:
+            tips('ok')
+        else:
+            error('stop md0 failed')
+            tips('try to set the raid disk false ...')
+            meta = get_meta_data()
+            raid_disk_list = meta['raid']['device']  # like: disk_11
+            for item in raid_disk_list:
+                tips('set fault ' + item)
+                sta = shell_cmd('mdadm -f /dev/md0 /dev/' + item, True, 1)
+                if sta != 0:
+                    tips('failed')
+                else:
+                    tips('ok')
+
+            sta = shell_cmd('mdadm -S /dev/md0', True, 1)
+            if sta != 0:
+                error('stop md0 failed, nothing to do !')
+                error('Note: ============================> You can reboot system, and try it again !!!')
+                quit(1, 'quit')
 
     print 'clean raid disk info ...'
     disk_str = ''
@@ -274,7 +319,7 @@ def delete_raid():
     if status == 0:
         tips('clean /opt/system/etc/mdadm.conf ok')
 
-    quit(1, 'bye ...')
+    quit(0, 'bye ...')
 ###############################################################################
 ###############################################################################
 ###############################################################################
@@ -376,13 +421,18 @@ if sys_disk:
     print 'Checking Xfs tools ...'
     status = shell_cmd('which mkfs.xfs', True, 1)
     if status != 0:  # not install tools
-        status, stdout, stderr = shell_cmd('echo -e "y\n" | yum install xfsprogs kmod-xfs')
+        status, stdout, stderr = shell_cmd('yum -y install xfsprogs xfsprogs-devel xfsdump kmod-xfs')
         if stdout or stderr:
             print stdout
             print stderr
         if status != 0:
             error('YUM error: install XFS tools failed')
             quit(1, 'quit ...')
+    # checking again
+    status = shell_cmd('which mkfs.xfs', True, 1)
+    if status != 0:
+        error('install XFS system tools failed, quit ...')
+        quit(1, 'bye')
 
     # check disk volume
     invalid_vol = check_disk_volume(sys_disk)
@@ -399,7 +449,7 @@ if sys_disk:
         for item in sys_disk:
             print 'clear partition info disk : ' + item + ' ...'
             print 'start time :' + time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-            status, stdout, stderr = shell_cmd('parted -s /dev/' + item + ' mklabel msdos')
+            status, stdout, stderr = shell_cmd('parted -s /dev/' + item + ' mklabel gpt')
             print 'end time :' + time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
             if stdout:
                 print 'out data : ' + stdout.strip()
@@ -478,6 +528,12 @@ elif raid_type == '5':
         log('building success')
     else:
         error('building error')
+
+# make md0 to gpt partition
+status = shell_cmd('parted -s /dev/md0 mklabel gpt', True, 1)
+if status != 0:
+    error('make md0 to gpt partition, failed')
+    quit(1, 'quit ...')
 
 # formating the raid device
 print 'RAID format to Xfs file system ...'
