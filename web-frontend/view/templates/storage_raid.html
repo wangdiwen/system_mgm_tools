@@ -62,7 +62,8 @@ function raid_base_info() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -154,7 +155,8 @@ function raid_start() {
                                     type: "PUT",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -175,7 +177,8 @@ function raid_stop() {
                                     type: "PUT",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -196,7 +199,8 @@ function resize_raid_volume() {
                                     type: "PUT",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -218,7 +222,8 @@ function is_alarming() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -238,7 +243,8 @@ function raid_alarm() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -250,7 +256,8 @@ function raid_alarm() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_progress = true;
@@ -320,7 +327,8 @@ function simple_event(num) {
                                         type: "GET",
                                         async: false,
                                         error: function(XMLHttpRequest, status, error) {
-                alert(error);
+                // alert(error);
+                return false;
             },
             success:function() {
                 ret_code = true;
@@ -337,7 +345,8 @@ function new_raid_test_alarm() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -365,7 +374,8 @@ function new_raid_refresh_backend() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -385,7 +395,8 @@ function new_raid_info() {
                                     type: "GET",
                                     async: false,
                                     error: function(XMLHttpRequest, status, error) {
-            alert(error);
+            // alert(error);
+            return false;
         },
         success:function() {
             ret_code = true;
@@ -495,7 +506,7 @@ function new_add_device(num) {
                                         type: "POST",
                                         async: false,
                                         error: function(XMLHttpRequest, status, error) {
-                alert(error);
+                // alert(error);
             },
             success:function() {
                 ret_code = true;
@@ -522,7 +533,7 @@ function new_remove_device(num) {
                                         type: "DELETE",
                                         async: false,
                                         error: function(XMLHttpRequest, status, error) {
-                alert(error);
+                // alert(error);
             },
             success:function() {
                 ret_code = true;
@@ -554,7 +565,7 @@ function new_remove_device_force(num) {
                                         type: "DELETE",
                                         async: false,
                                         error: function(XMLHttpRequest, status, error) {
-                alert(error);
+                // alert(error);
             },
             success:function() {
                 ret_code = true;
@@ -581,7 +592,7 @@ function new_active_device(num) {
                                         data: data,
                                         async: false,
                                         error: function(XMLHttpRequest, status, error) {
-                alert(error);
+                // alert(error);
             },
             success:function() {
                 ret_code = true;
@@ -617,7 +628,8 @@ $$(document).ready(function() {
             <h3>阵列信息</h3>
         </div>
         <!-- <div class="green"><span>阵列损坏！ </span></div> -->
-        <div class="green" id="alarm_title"><span id="alarm_title_text">阵列警报提醒</span></div>
+        <!-- <div class="green" id="alarm_title"><span id="alarm_title_text"></span></div> -->
+        <div id="alarm_title"><span id="alarm_title_text"></span></div>
     </div>
 
     <div class="box">

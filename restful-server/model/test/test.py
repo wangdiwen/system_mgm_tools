@@ -71,7 +71,8 @@ def crawler_sys_meta():
         # check ethtool_opts exist or not
         if re.compile('^eth[0-9]$').match(adaptor):
             if not 'ETHTOOL_OPTS' in eth_info.keys():
-                eth_info['ETHTOOL_OPTS'] = 'speed 1000 duplex full autoneg on'
+                # eth_info['ETHTOOL_OPTS'] = 'speed 1000 duplex full autoneg on'
+                eth_info['ETHTOOL_OPTS'] = 'autoneg on'    # just auto, by diwen
         meta['network']['adaptors'][adaptor] = eth_info
 
     # 4. iptables and route
