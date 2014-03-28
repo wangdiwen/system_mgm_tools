@@ -438,13 +438,14 @@ if sys_disk:
     print 'Checking Xfs tools ...'
     status = shell_cmd('which mkfs.xfs', True, 1)
     if status != 0:  # not install tools
-        status, stdout, stderr = shell_cmd('yum -y install xfsprogs xfsprogs-devel xfsdump kmod-xfs')
+        status, stdout, stderr = shell_cmd('yum -y install xfsprogs xfsprogs-devel xfsdump')
         if stdout or stderr:
             print stdout
             print stderr
         if status != 0:
             error('YUM error: install XFS tools failed')
             quit(1, 'quit ...')
+
     # checking again
     status = shell_cmd('which mkfs.xfs', True, 1)
     if status != 0:
