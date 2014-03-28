@@ -159,31 +159,36 @@ def alarm_info():
     data = '0'
     has_started = has_raid_started()
     if not has_started:
-        data = '3'
-        return data
-    # checking disk faulty
+        return '3'
+
+    # checking disk faulty, md0 cannot work
     raid_info = raid_base_info()
-    if not raid_info:  # {}, md0 not start
-        return False
+    if not raid_info:               # {}, md0 not start
+        return '3'
 
     state = raid_info['state'].strip()
 
+    # just failed 1 device, or check other status info
     if 'failed devices' in raid_info.keys() \
         and raid_info['failed devices'] != '0':
         data = '1'
     else:
-        if state == 'clean, FAILED':  # here, removed or bad 2 disk, raid maybe not working when restart
-            data = '5'
-        elif re.compile('.*recovering.*').match(state) \
+        if re.compile('.*recovering.*').match(state) \
                 or re.compile('.*reshaping.*').match(state) \
                 or re.compile('.*rebuilding.*').match(state):
             data = '4'
 
-    # checking has force removed disk, this situation is most important
-    force_removed_disk_list = get_force_removed()
-    # print force_removed_disk_list
-    if len(force_removed_disk_list) >= 1:
-        data = '2'
+    # check raid is can work or not
+    # here, removed or bad 2 disk, raid maybe not working when restart
+    if state == 'clean, FAILED':
+        data = '5'
+    else:
+        # checking has force removed disk, this situation is most important
+        force_removed_disk_list = get_force_removed()
+        # print force_removed_disk_list
+        if len(force_removed_disk_list) >= 1:
+            data = '2'
+
     return data
 
 def new_raid_manager():

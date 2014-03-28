@@ -50,7 +50,7 @@ start() {
 	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
   sleep 5  # by diwen, restful demon will be delay
 	RETVAL=$?
-  ps -ef | grep restful | grep -v grep
+  ps -ef | grep restful | grep -v grep > /dev/null
   if [ "$?" == "0" ]; then
     echo "restful status => success"
   else
