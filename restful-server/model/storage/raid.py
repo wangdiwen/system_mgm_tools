@@ -11,6 +11,7 @@ from common import invoke_shell
 from common.restfulclient import RestfulError
 
 from common.global_helper import *  # public helper functions
+from model.log.log import RestLog
 
 urls = (
     '', 'Raid',
@@ -454,10 +455,24 @@ def active_new_disk(dev_name):  # like 'disk_1'
             time.sleep(1)
             if status == 0:
                 # print 'format new partition success'
+                ###################### Here, resolve the 'device or resource busy' problem ###################3
+                # Note: helpful url http://dev.bizo.com/2012/07/mdadm-device-or-resource-busy.html
+
+                #################################
+                # shutdown the udev monitor queue
+                status, stdout, stderr = invoke_shell('udevadm control --stop-exec-queue')
+                if status != 0:
+                    RestLog.debug('add_spare_disk: [udevadm control --stop-exec-queue] failed')
 
                 # 2, add to md0
                 sta, out, err = invoke_shell('mdadm -a /dev/md0 /dev/' + dev_name + '1')
                 if sta == 0:
+                    ###################################
+                    # open the udev monitor queue again
+                    status, stdout, stderr = invoke_shell('udevadm control --start-exec-queue')
+                    if status != 0:
+                        RestLog.debug('add_spare_disk: [udevadm control --start-exec-queue] failed')
+
                     # clear the lastest faulty disk record
                     RaidExt.faulty_disk_name = ''
                     # save the cur raid config
@@ -599,9 +614,24 @@ def add_spare_disk(dev_name):
     meta = get_meta_data()
     raid_meta = meta['raid']
 
+    ###################### Here, resolve the 'device or resource busy' problem ###################3
+    # Note: helpful url http://dev.bizo.com/2012/07/mdadm-device-or-resource-busy.html
+
+    #################################
+    # shutdown the udev monitor queue
+    status, stdout, stderr = invoke_shell('udevadm control --stop-exec-queue')
+    if status != 0:
+        RestLog.debug('add_spare_disk: [udevadm control --stop-exec-queue] failed')
+
     shell = 'mdadm -G /dev/md0 -a -n %d %s' % (raid_meta['count'] + 1, '/dev/' + dev_name + '1')
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
+        ###################################
+        # open the udev monitor queue again
+        status, stdout, stderr = invoke_shell('udevadm control --start-exec-queue')
+        if status != 0:
+            RestLog.debug('add_spare_disk: [udevadm control --start-exec-queue] failed')
+
         raid_meta['count'] = raid_meta['count'] + 1
         raid_meta['device'].append(dev_name + '1')
         # save raid meta

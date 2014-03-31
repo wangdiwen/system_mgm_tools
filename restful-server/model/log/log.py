@@ -35,3 +35,9 @@ class RestLog():
             file = open(RestLog.log_file, 'a')
             file.write(log_msg.strip()+"\n")
             file.close()
+
+    @staticmethod
+    def debug(msg):
+        file = open(RestLog.log_file, 'a')
+        file.write(msg.strip()+"\n")
+        file.close()
