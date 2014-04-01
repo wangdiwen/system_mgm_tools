@@ -144,7 +144,7 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'mount -t nfs ' + device + ' ' + mount_point
+        cmd = 'mount -t nfs -o soft,timeo=5,retry=5 ' + device + ' ' + mount_point
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
@@ -169,7 +169,7 @@ def mount(info):
     elif type == 'samba':
         if not re.compile("^\/\/").match(device):
             return False
-        cmd = 'mount -t cifs ' + device + ' ' + mount_point + ' -o username=' + username + ',password=' + password +',uid=mmap,gid=mmap'
+        cmd = 'mount -t cifs ' + device + ' ' + mount_point + ' -o username=' + username + ',password=' + password +',uid=mmap,gid=mmap,soft,timeo=5,retry=5'
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
