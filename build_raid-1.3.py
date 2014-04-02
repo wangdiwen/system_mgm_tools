@@ -351,7 +351,7 @@ def delete_raid():
     if sys_disk:
         tmp_disk_list = []
         for item in sys_disk:
-            tmp_disk_list.append('/dev/' + item)
+            tmp_disk_list.append('/dev/' + item + '1')
         disk_str = ' '.join(tmp_disk_list)
     status = shell_cmd('mdadm --zero-superblock ' + disk_str, True, 1)
     if status == 0:
@@ -453,7 +453,7 @@ if sys_disk:
     print 'clear the super block ...'
     super_disk = ''
     for item in sys_disk:
-        super_disk += '/dev/' + item + ' '
+        super_disk += '/dev/' + item + '1' + ' '
     clear_super_cmd = 'mdadm --zero-superblock ' + super_disk
     status, stdout, stderr = shell_cmd(clear_super_cmd)
     if stdout:
