@@ -151,7 +151,8 @@ def mount(info):
             if startup == 'on':
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
-                    fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
+                    # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
+                    fstab = device + ' ' + mount_point + ' nfs soft,timeo=3,retry=3 0 0'
                     # print fstab
                     record_mount_log(fstab)
 
@@ -176,7 +177,7 @@ def mount(info):
             if startup == 'on':
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
-                    fstab = device + ' ' + mount_point + ' cifs username=' + username + ',password=' + password + ',uid=mmap,gid=mmap' + '  0 0'
+                    fstab = device + ' ' + mount_point + ' cifs username=' + username + ',password=' + password + ',uid=mmap,gid=mmap,soft,timeo=5,retry=5' + '  0 0'
                     # print fstab
                     record_mount_log(fstab)
 
