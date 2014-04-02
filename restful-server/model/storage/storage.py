@@ -144,7 +144,7 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'mount -t nfs -o soft,timeo=5,retry=5 ' + device + ' ' + mount_point
+        cmd = 'mount -t nfs -o soft,timeo=3,retry=3 ' + device + ' ' + mount_point
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
