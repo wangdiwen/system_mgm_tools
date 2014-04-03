@@ -29,18 +29,19 @@ start() {
         KIND="restful-server"
 
   echo "Starting RAID services ..."
-  for item in `cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
+  echo "clean other auto raid device ..."
+  for item in `timeout 3 cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
       #statements
       if [ -n $item ]; then
           echo "stop other md device $item ..."
-          mdadm -S /dev/$item 2>&1 &
+          timeout 5 mdadm -S /dev/$item 2>&1 &
       fi
   done
 
-  num=`cat /proc/mdstat | grep md0 | wc -l`
+  num=`timeout 3 cat /proc/mdstat | grep md0 | wc -l`
   if [ "$num" == "0" ] && [ -f "/etc/mdadm.conf" ]; then
-      mdadm -As &
-      [ "$?" == "0" ] && { echo "starting success"; }
+      timeout 5 mdadm -As &
+      [ "$?" == "0" ] && { echo "starting raid success"; }
   else
       echo "RAID is running, no need to start ..."
   fi
@@ -48,7 +49,7 @@ start() {
 	echo -n $"Starting $KIND services: "
 	cd /usr/local/restful-server
 	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
-  sleep 5  # by diwen, restful demon will be delay
+  # sleep 5  # by diwen, restful demon will be delay
 	RETVAL=$?
   ps -ef | grep restful | grep -v grep > /dev/null
   if [ "$?" == "0" ]; then

@@ -21,7 +21,7 @@ urls = (
 
 def has_raid_started():
     started = False
-    shell = 'mdadm -D /dev/md0'
+    shell = 'timeout 3 mdadm -D /dev/md0'
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
         started = True
@@ -30,7 +30,7 @@ def has_raid_started():
 def available_system_disk():
     data = []
 
-    shell = 'ls /dev/ | grep disk_[0-9]$'
+    shell = 'timeout 3 ls /dev/ | grep disk_[0-9]$'
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
         for dev in stdout.split("\n"):
@@ -53,7 +53,7 @@ def available_system_disk():
 def raid_base_info():
     data = {}
     dev = '/dev/md0'
-    cmd = 'mdadm -D ' + dev
+    cmd = 'timeout 3 mdadm -D ' + dev
     status, stdout, stderr = invoke_shell(cmd)
     if status == 0:
         list_all = []
@@ -98,7 +98,7 @@ def status_info():
     if not raid_info:
         # raise RestfulError('580 Error: RAID device stop working !')
         # try to start the raid
-        sta, out, err = invoke_shell('mdadm -As')
+        sta, out, err = invoke_shell('timeout 3 mdadm -As')
         if sta != 0:
             print 'try to start raid, failed'
         if err or out:
@@ -279,13 +279,13 @@ def new_raid_test():
     return 'ok'
 
 def raid_stop():
-    shell = 'mdadm -Ss'
+    shell = 'timeout 5 mdadm -Ss'
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
         return True
     else:
         # try to stop raid not use config file
-        shell_try = 'mdadm -S /dev/md0'
+        shell_try = 'timeout 5 mdadm -S /dev/md0'
         sta, out, err = invoke_shell(shell_try)
         if sta == 0:
             return True
@@ -297,7 +297,7 @@ def raid_start():
     if has_started:
         raise RestfulError('580 Error: Raid has started !')
 
-    shell = 'mdadm -As'
+    shell = 'timeout 5 mdadm -As'
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
         return True
@@ -310,7 +310,7 @@ def raid_start():
             new_disk = []
             for dev in raid_disk:
                 new_disk.append('/dev/' + dev)
-            shell_try = 'mdadm -A /dev/md0 ' + ' '.join(new_disk)
+            shell_try = 'timeout 5 mdadm -A /dev/md0 ' + ' '.join(new_disk)
             sta, out, err = invoke_shell(shell_try)
             if sta == 0:
                 # update the config file '/etc/mdadm.conf'
@@ -330,7 +330,7 @@ def raid_start():
 
 def raid_disk_map():
     data = {}
-    status, stdout, stderr = invoke_shell('ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9][0-9]"')
+    status, stdout, stderr = invoke_shell('timeout 5 ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9][0-9]"')
     if status == 0:
         # print stdout
         for line in stdout.split("\n"):
@@ -342,7 +342,7 @@ def raid_disk_map():
 
 def disk_raid_map():
     data = {}
-    status, stdout, stderr = invoke_shell('ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9][0-9]"')
+    status, stdout, stderr = invoke_shell('timeout 5 ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9][0-9]"')
     if status == 0:
         # print stdout
         for line in stdout.split("\n"):
@@ -354,7 +354,7 @@ def disk_raid_map():
 
 def system_disk_list():
     data = []
-    status, stdout, stderr = invoke_shell('ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9] sd"')
+    status, stdout, stderr = invoke_shell('timeout 5 ls -l /dev/disk_* | awk \'{ print $9,$11 }\' | awk -F/ \'{ print $3 }\' | grep -v grep | grep "^disk_[0-9] sd"')
     if status == 0:
         for line in stdout.split("\n"):
             tmp_list = line.split(' ')
@@ -388,7 +388,7 @@ def remove_faulty_dev(dev_name):  # disk_1
 
     # remove the faulty disk
     # first, set the disk faulty
-    set_cmd = 'mdadm -f /dev/md0 /dev/' + dev_name
+    set_cmd = 'timeout 5 mdadm -f /dev/md0 /dev/' + dev_name
     status, stdout, stderr = invoke_shell(set_cmd)
     print 'set the disk faulty ' + dev_name
     print set_cmd
@@ -396,7 +396,7 @@ def remove_faulty_dev(dev_name):  # disk_1
         print stderr.strip()
 
     print 'remove faulty disk ...'
-    shell = 'mdadm -r /dev/md0 /dev/' + dev_name
+    shell = 'timeout 5 mdadm -r /dev/md0 /dev/' + dev_name
     print shell
     status, stdout, stderr = invoke_shell(shell)
     if status == 0:
@@ -804,7 +804,7 @@ def resize_raid_fs():
 
 def raid_sync_progress():
     progress = '100%'
-    status, stdout, stderr = invoke_shell('cat /proc/mdstat | grep finish | head -n 1 | awk \'{ print $4 }\'', True)
+    status, stdout, stderr = invoke_shell('timeout 5 cat /proc/mdstat | grep finish | head -n 1 | awk \'{ print $4 }\'', True)
     if stdout:
         progress = stdout.strip()
     return progress

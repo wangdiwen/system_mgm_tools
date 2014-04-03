@@ -16,9 +16,9 @@ urls = (
 
 def storage_info():
     data = []
-    cmd = 'df -h'
+    cmd = 'timeout 3 df -h'
     status, stdout, stderr = invoke_shell(cmd)
-    if status == 0:
+    if stdout:
         tmp_dict = {}
         tmp_dict['device'] = ''
         tmp_dict['size'] = ''
@@ -27,7 +27,8 @@ def storage_info():
         tmp_dict['use%'] = ''
         tmp_dict['mount-point'] = ''
         for line in stdout.split("\n"):
-            if not re.compile("^Filesystem").match(line):
+            if not re.compile("^Filesystem").match(line) \
+                and re.compile('.*%.*').match(line):
                 list = line.split()
                 length = len(list)
                 if length == 1:
@@ -116,7 +117,7 @@ def mount(info):
 
     # print type
     if type == 'disk' or type == 'tmpfs':
-        cmd = 'mount -t ' + device_type + ' ' + device + ' ' + mount_point
+        cmd = 'timeout 5 mount -t ' + device_type + ' ' + device + ' ' + mount_point
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
@@ -144,7 +145,7 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'mount -t nfs -o soft,timeo=3,retry=3 ' + device + ' ' + mount_point
+        cmd = 'timeout 5 mount -t nfs -o intr,soft,timeo=1,retrans=2,retry=0 ' + device + ' ' + mount_point
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
@@ -152,7 +153,7 @@ def mount(info):
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
                     # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
-                    fstab = device + ' ' + mount_point + ' nfs soft,timeo=3,retry=3 0 0'
+                    fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=1,retrans=2,retry=0 0 0'
                     # print fstab
                     record_mount_log(fstab)
 
@@ -170,14 +171,14 @@ def mount(info):
     elif type == 'samba':
         if not re.compile("^\/\/").match(device):
             return False
-        cmd = 'mount -t cifs ' + device + ' ' + mount_point + ' -o username=' + username + ',password=' + password +',uid=mmap,gid=mmap,soft,timeo=5,retry=5'
+        cmd = 'timeout 5 mount -t cifs ' + device + ' ' + mount_point + ' -o username=' + username + ',password=' + password +',uid=mmap,gid=mmap,intr,soft,timeo=1,retrans=1,retry=0'
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
             if startup == 'on':
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
-                    fstab = device + ' ' + mount_point + ' cifs username=' + username + ',password=' + password + ',uid=mmap,gid=mmap,soft,timeo=5,retry=5' + '  0 0'
+                    fstab = device + ' ' + mount_point + ' cifs username=' + username + ',password=' + password + ',uid=mmap,gid=mmap,intr,bg,soft,timeo=1,retrans=1,retry=0' + '  0 0'
                     # print fstab
                     record_mount_log(fstab)
 
@@ -267,7 +268,7 @@ def umount(info):
     if mount_point in swap_device_list():
         cmd = 'swapoff ' + mount_point
     else:
-        cmd = 'umount ' + mount_point
+        cmd = 'umount -f ' + mount_point
     status, stdout, stderr = invoke_shell(cmd)
     if status == 0:
         # print 'umount ' + mount_point + ' success'
@@ -275,7 +276,7 @@ def umount(info):
         if has_fstab:
             delete_mount_log(mount_point)
     else:
-        msg = 'Error: ' + stdout
+        msg = 'Error: ' + stdout.strip() + ' ' + stderr.strip()
         error(msg);
     return
 

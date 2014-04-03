@@ -444,7 +444,7 @@ if sys_disk:
         error('RAID must give 3 disks to builded, quit !')
 
     print 'Stop mdadm device ...'
-    status, stdout, stderr = shell_cmd('mdadm -Ss')
+    status, stdout, stderr = shell_cmd('mdadm -S /dev/md0')
     if stdout:
         log(stdout.strip())
     if stderr:
@@ -584,10 +584,16 @@ if status != 0:
 print 'RAID format to Xfs file system ...'
 status = shell_cmd('mkfs.xfs -f /dev/md0 &', True, 1)
 if status == 0:
-    log('congratulations, raid is working ok ^_^')
+    # check raid status again
+    sta = shell_cmd('timeout 3 mdadm -D /dev/md0', True, 1)
+    if sta == 0:
+        log('congratulations, raid is working ok ^_^')
+    else:
+        warning('oh, maybe something was wrong ...')
+        error('raid not working ok')
+        quit(1, 'quit')
 else:
-    warning('oh, maybe something was wrong ...')
-    warning('You can call wangdiwen to solve problem, bye')
+    warning('You can call raid developer to solve problem, bye')
 
 
 print ''
