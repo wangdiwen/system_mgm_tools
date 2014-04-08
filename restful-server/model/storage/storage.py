@@ -28,7 +28,7 @@ def storage_info():
         tmp_dict['mount-point'] = ''
         for line in stdout.split("\n"):
             if not re.compile("^Filesystem").match(line) \
-                and re.compile('.*%.*').match(line):
+                and not re.compile('.*error.*').match(line):
                 list = line.split()
                 length = len(list)
                 if length == 1:
