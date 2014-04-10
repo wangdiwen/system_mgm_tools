@@ -5,7 +5,7 @@
 Summary: Restful Server Program
 Name: restful-server
 Version: 1.4
-Release: 2.el6
+Release: 2rc1.el6
 License: GPL
 Group: Application/System
 Vendor: Vmediax.com
@@ -14,6 +14,7 @@ URL: http://vmediax.com/download/restful-server-1.3.1.tar.gz
 Distribution: CentOS 6.4 5.9 x86_64
 Packager: wangdiwen <wangdiwen@vmediax.com>
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+Requires: python27
 Prefix: /
 
 %define install_path		/
