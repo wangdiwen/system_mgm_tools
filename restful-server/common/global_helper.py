@@ -80,12 +80,27 @@ def delete_rpm_log(rpm_name):
     return ret
 
 def record_rpm_log(rpm_name):
+    # '/opt/program/bin/' dir name -> rpm pkg name, map data
+    rpm_dir = {
+        'hvec': 'hvec',
+        'as': 'wowza',
+        'mrs-as-backend': 'rss',
+        'mrs-oss-backend': 'rss',
+        'mrs-frontend': 'tomcat',
+        'apache-vmx': 'apache',
+    }
+
     meta = get_meta_data()
     meta['software']['installed'].append(rpm_name)
+
     # record the auto startup software
-    init_file = '/opt/program/bin/' + rpm_name + '/.init'
+    dir_name = rpm_name
+    if rpm_name in rpm_dir.keys():
+        dir_name = rpm_dir[rpm_name]
+
+    init_file = '/opt/program/bin/' + dir_name + '/.init'
     if os.path.isfile(init_file):
-        rpm_startup = rpm_name+'|on'
+        rpm_startup = dir_name + '|on'
         meta['software']['startup'].append(rpm_startup)
         # create 'startup' conf file
         conf_file = '/opt/system/conf/restful-server/startup'
