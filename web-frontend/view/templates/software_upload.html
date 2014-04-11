@@ -93,41 +93,47 @@ function detail_process(grid)
     if (retcode)
     {
         $$("#info_table > tr").remove();
-        var ret_data = $$.parseJSON(ret)
-        var key = ["name", "version", "release", "vendor", "installdate", "builddate", "buildhost", "relocations", "group", "sourcerpm", "size", "license", "signature", "url", "summary", "description"];
-        var value = ["Name", "Version", "Release", "Vendor", "Install Date", "Build Date", "Build Host", "Relocations", "Group", "Source RPM", "Size", "License", "Signature", "URL", "Summary", "Description"];
-        for (var i = 0 ; i < key.length; i++)
-        {
-            if (typeof ret_data[key[i]] != "undefined")
-                $$("#info_table").append('<tr><td width="100">' + value[i] + '</td><td>' + ret_data[key[i]] + '</td></tr>');
+        var ret_data = $$.parseJSON(ret);
+        if (typeof ret_data['name'] != 'undefined') {
+            var key = ["name", "version", "release", "vendor", "installdate", "builddate", "buildhost", "relocations", "group", "sourcerpm", "size", "license", "signature", "url", "summary", "description"];
+            var value = ["Name", "Version", "Release", "Vendor", "Install Date", "Build Date", "Build Host", "Relocations", "Group", "Source RPM", "Size", "License", "Signature", "URL", "Summary", "Description"];
+            for (var i = 0 ; i < key.length; i++)
+            {
+                if (typeof ret_data[key[i]] != "undefined")
+                    $$("#info_table").append('<tr><td width="100">' + value[i] + '</td><td>' + ret_data[key[i]] + '</td></tr>');
+            }
+            $$('#dialog').dialog('open');
+        }
+        else {
+            alert('此软件包未安装！');
         }
     }
-    $$('#dialog').dialog('open');
 }
 
 $$(document).ready(function() {
 
     $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
-    
+
     $$("#grid").vmxGrid({
         url : '/model/software/uninstall',
-        title: "软件包管理", 
-        buttons : [ 
+        title: "软件包",
+        buttons : [
+        // {
+        //     name : '删除',
+        //     bclass : 'del',
+        //     onpress : uninstall
+        // },
         {
-            name : '删除',
-            bclass : 'del',
-            onpress : uninstall
-        },{
-            name : '详情',
+            name : '查看软件包详情',
             bclass : 'view',
             onpress : detail_process
         }],
-        foot:[ 
+        foot:[
         {
-            html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' + 
-                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="上传" onclick="upload();" />' + 
+            html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
+                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="上传" onclick="upload();" />' +
                 //'<input id="checkbox" type="checkbox" value="" />Develop升级模式' +
-                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + 
+                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' +
             '</form>'
         }]
     });

@@ -10,6 +10,6 @@ echo 'ok'
 
 echo ''
 echo 'restart the tools ...'
-#/etc/init.d/restful-server restart
+/etc/init.d/restful-server restart
 #/etc/init.d/web-frontend restart
 

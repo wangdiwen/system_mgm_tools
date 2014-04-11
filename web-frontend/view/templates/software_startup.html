@@ -33,7 +33,7 @@ function next_process(grid)
     var size = $$("#grid").data("user_option").size;
     if (parseInt(position) == size - 1)
         return;
-        
+
     position = parseInt(position) + 1;
     var data = '{"name":"' + name + '","position":"' + position + '"}';
     var ret = restful_ajax({url:"/model/software/startup", type:"PUT", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
@@ -110,7 +110,7 @@ $$(document).ready(function() {
         title : '开机项管理',
         colModel : [
             {
-                display : '位置',
+                display : '启动顺序',
                 name : 'position',
                 width : 50,
                 sortable : false,
@@ -131,36 +131,37 @@ $$(document).ready(function() {
                 align : 'left'
             }
         ],
-        buttons : [ 
-        {
-            name : '取消开机启动',
-            bclass : 'del_red',
-            onpress : close_process
-        },
-        {
-            name : '激活开机启动',
-            bclass : 'yes',
-            onpress : open_process
-        },
-        {
-            name : '关闭',
-            bclass : 'stop',
-            onpress : stop_process
-        },
-        {
-            name : '启动',
-            bclass : 'start',
-            onpress : start_process
-        },
-        {
-            name : '上移',
-            bclass : 'prev',
-            onpress : prev_process
-        },{
-            name : '下移',
-            bclass : 'next',
-            onpress : next_process
-        }]
+        buttons : [
+        // {
+        //     name : '取消开机启动',
+        //     bclass : 'del_red',
+        //     onpress : close_process
+        // },
+        // {
+        //     name : '激活开机启动',
+        //     bclass : 'yes',
+        //     onpress : open_process
+        // },
+        // {
+        //     name : '关闭',
+        //     bclass : 'stop',
+        //     onpress : stop_process
+        // },
+        // {
+        //     name : '启动',
+        //     bclass : 'start',
+        //     onpress : start_process
+        // },
+        // {
+        //     name : '上移',
+        //     bclass : 'prev',
+        //     onpress : prev_process
+        // },{
+        //     name : '下移',
+        //     bclass : 'next',
+        //     onpress : next_process
+        // }
+        ]
     });
 });
 

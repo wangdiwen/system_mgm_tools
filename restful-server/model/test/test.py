@@ -137,6 +137,62 @@ def render_test_conf():  # test example
     }
     return render_template(conf, map_dict, save)
 
+def init_vmx_rpm_list(global_meta):
+    rpm_list = [
+        'activemq', 'apache-vmx', 'aria2c', 'as', 'configures', 'hvec', 'jre-vmx',
+        'logread', 'media-mounts', 'mrs-as-backend', 'mrs-frontend', 'mysql-conf',
+        'net-snmp-vmx', 'openoffice-conf', 'python27', 'restful-server', 'rsyncd',
+        'shellexecutor', 'sigar-vmx', 'swftools', 'usbkey', 'videotools', 'web-frontend',
+        'mrs-oss-backend', 'mrs-4000-os', 'mrs-4000-as',
+    ]
+
+    if 'software' in global_meta.keys():
+        global_meta['software']['installed'] = []
+        for item in rpm_list:
+            global_meta['software']['installed'].append(item)
+
+        # save the meta data
+        ret = set_meta_data(global_meta)
+        if ret:
+            return True
+    return False
+
+def init_vmx_startup(global_meta):
+    all_rpm = ['hvec', 'wowza', 'rss', 'tomcat', 'apache']
+    has_mod = False
+    sta, out, err = shell_cmd('find /opt/program/bin/ -type f -name \".init\" | awk -F\"/\" \'{ print $5 }\'')
+    # out like: 'apache  hvec  lost+found  rss  tomcat  videotools  wowza'
+    if sta == 0 and out:
+        name_list = out.strip().split("\n")
+        if len(name_list) > 0 and 'software' in global_meta.keys():
+            global_meta['software']['startup'] = []
+
+            other_rpm = []
+            for item in name_list:
+                if not item in all_rpm:
+                    other_rpm.append(item)
+
+            for item in all_rpm:
+                if item in name_list:
+                    global_meta['software']['startup'].append(item + '|on')
+                else:
+                    global_meta['software']['startup'].append(item + '|off')
+
+            for item in other_rpm:
+                global_meta['software']['startup'].append(item + '|on')
+
+            # create 'startup' conf file
+            conf_file = '/opt/system/conf/restful-server/startup'
+            ret = create_conf_by_list(conf_file, global_meta['software']['startup'], '', '')
+
+            has_mod = True
+
+        if has_mod:
+            ret = set_meta_data(global_meta)
+            if ret:
+                return True
+    return False
+
 def init_meta_data():
     print '=========================================================='
     print 'Now, checking global meta data...'
@@ -150,7 +206,17 @@ def init_meta_data():
         print 'Init global meta data OK !'
     else:
         print 'Warning: System already has meta, no need to init !'
-        print '=========================================================='
+
+    # init vmediax's rpm pkg list data
+    ret = init_vmx_rpm_list(meta)
+    if ret:
+        print 'init vmediax rpm pkg list OK'
+
+    ret = init_vmx_startup(meta)
+    if ret:
+        print 'init vmediax startup software OK'
+
+    print '=========================================================='
     return True
 
 def detect_system_tools():
