@@ -215,6 +215,7 @@ def init_meta_data():
         print 'Warning: System already has meta, no need to init !'
 
     # init vmediax's rpm pkg list data
+    meta = get_meta_data()              # get the new meta again
     ret = init_vmx_rpm_list(meta)
     if ret:
         print 'init vmediax rpm pkg list OK'
