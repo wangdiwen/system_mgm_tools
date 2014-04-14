@@ -159,13 +159,14 @@ def init_vmx_rpm_list(global_meta):
 
 def init_vmx_startup(global_meta):
     # '/opt/program/bin/' dir name -> rpm pkg name, map data
-    all_rpm = {
-        'hvec': 'hvec',
-        'wowza': 'as',
-        'rss': 'mrs-as-backend/mrs-oss-backend',
-        'tomcat': 'mrs-frontend',
-        'apache': 'apache-vmx',
-    }
+    # all_rpm = {
+    #     'hvec': 'hvec',
+    #     'wowza': 'as',
+    #     'rss': 'mrs-as-backend/mrs-oss-backend',
+    #     'tomcat': 'mrs-frontend',
+    #     'apache': 'apache-vmx',
+    # }
+    all_rpm = ['hvec', 'wowza', 'rss', 'tomcat', 'apache']
     has_mod = False
     sta, out, err = shell_cmd('find /opt/program/bin/ -type f -name \".init\" | awk -F\"/\" \'{ print $5 }\'')
     # out like: 'apache  hvec  lost+found  rss  tomcat  videotools  wowza'
@@ -176,10 +177,10 @@ def init_vmx_startup(global_meta):
 
             other_rpm = []
             for item in name_list:
-                if not item in all_rpm.keys():
+                if not item in all_rpm:
                     other_rpm.append(item)
 
-            for item in all_rpm.keys():
+            for item in all_rpm:
                 if item in name_list:
                     global_meta['software']['startup'].append(item + '|on')
                 else:
