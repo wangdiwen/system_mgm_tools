@@ -6,11 +6,11 @@
 
 # Source function library.
 if [ -f /etc/init.d/functions ] ; then
-  . /etc/init.d/functions
+. /etc/init.d/functions
 elif [ -f /etc/rc.d/init.d/functions ] ; then
-  . /etc/rc.d/init.d/functions
+. /etc/rc.d/init.d/functions
 else
-  exit 1
+exit 1
 fi
 
 # Avoid using root's TMPDIR
@@ -26,89 +26,90 @@ RETVAL=0
 [ -x /usr/local/restful-server/restful-server.py ] || exit 2
 
 start() {
-  KIND="restful-server"
+    KIND="restful-server"
 
-  echo "Starting RAID services ..."
-  if [ -f "/etc/mdadm.conf" ]; then
-    echo "clean other auto raid device ..."
-    for item in `timeout 3 cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
-        #statements
-        if [ -n $item ]; then
-            echo "stop other md device $item ..."
-            timeout 5 mdadm -S /dev/$item 2>&1 &
+    echo "Starting RAID services ..."
+    if [ -f "/etc/mdadm.conf" ]; then
+        echo "clean other auto raid device ..."
+        for item in `timeout 3 cat /proc/mdstat | grep -E "^md" | grep -v md0 | awk '{ print $1 }'`; do
+            #statements
+            if [ -n $item ]; then
+                echo "stop other md device $item ..."
+                timeout 5 mdadm -S /dev/$item 2>&1 &
+            fi
+        done
+
+        num=`timeout 3 cat /proc/mdstat | grep md0 | wc -l`
+        if [ "$num" == "0" ]; then
+            timeout 5 mdadm -As &
+            [ "$?" == "0" ] && { echo "starting raid success"; }
+        else
+            echo "RAID is running, no need to start ..."
         fi
-    done
-
-    num=`timeout 3 cat /proc/mdstat | grep md0 | wc -l`
-    if [ "$num" == "0" ]; then
-        timeout 5 mdadm -As &
-        [ "$?" == "0" ] && { echo "starting raid success"; }
     else
-        echo "RAID is running, no need to start ..."
+        echo "The product not support raid !"
     fi
-  else
-    echo "The product not support raid !"
-  fi
 
-	echo -n $"Starting $KIND services: "
-	cd /usr/local/restful-server
-	daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
-	RETVAL=$?
-  ps -ef | grep restful | grep -v grep > /dev/null
-  if [ "$?" == "0" ]; then
-    echo "restful status => success"
-  else
-    echo "restful status => failed"
-  fi
-	echo
-	return $RETVAL
+    echo -n $"Starting $KIND services: "
+    cd /usr/local/restful-server
+    daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
+    RETVAL=$?
+    ps -ef | grep restful | grep -v grep > /dev/null
+    if [ "$?" == "0" ]; then
+        echo "restful status => success"
+    else
+        echo "restful status => failed"
+    fi
+
+    echo
+    return $RETVAL
 }
 
 stop() {
-        KIND="restful-server"
-	echo -n $"Shutting down $KIND services: "
-	killproc /usr/local/restful-server/restful-server.py
-	RETVAL=$?
-	echo
-	return $RETVAL
+    KIND="restful-server"
+    echo -n $"Shutting down $KIND services: "
+    killproc /usr/local/restful-server/restful-server.py
+    RETVAL=$?
+    echo
+    return $RETVAL
 }
 
 restart() {
-	stop
-	start
+    stop
+    start
 }
 
 rhstatus() {
-	status /usr/local/restful-server/restful-server.py
-	RETVAL=$?
-	if [ $RETVAL -ne 0 ] ; then
-		return $RETVAL
-	fi
+    status /usr/local/restful-server/restful-server.py
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ] ; then
+        return $RETVAL
+    fi
 }
 
 
 # Allow status as non-root.
 if [ "$1" = status ]; then
-       rhstatus
-       exit $?
+    rhstatus
+    exit $?
 fi
 
 case "$1" in
   start)
-  	start
-	;;
+      start
+  ;;
   stop)
-  	stop
-	;;
+      stop
+  ;;
   restart)
-  	restart
-	;;
+      restart
+  ;;
   status)
-  	rhstatus
-	;;
+      rhstatus
+  ;;
   *)
-	echo $"Usage: $0 {start|stop|restart|status}"
-	exit 2
+  echo $"Usage: $0 {start|stop|restart|status}"
+  exit 2
 esac
 
 exit $?
