@@ -685,7 +685,12 @@ def stop_scsi_disk(dev_name):  # like: 'disk_1'
         raise RestfulError('580 Warnning: Not find valid scsi id, Maybe not stop the disk '+ dev_name)
     return ret
 
-def find_system_scsi_id_max(option = 0):  # option: 0 -> scsi0, 1 -> scsi1
+# Note:
+#     1, old system disk is dom, so the 'proc/scsi' show scsi0 and scsi1;
+#     2, now system is 60G KINGSTON disk, 'proc/scsi' info is scsi6 and scsi7;
+def find_system_scsi_id_max(option = 0):  # option: 0 -> scsi6, 1 -> scsi7
+    option = 6 if option == 0 else 7        # checking ...
+
     shell = 'cat /proc/scsi/scsi | grep scsi'+ str(option) +' | awk \'{ print $6 }\' | cut -c2'
     sta, out, err = invoke_shell(shell)
     if sta == 0 and out:
@@ -827,21 +832,21 @@ class ScsiMonitor():
     def init_scsi_raid_map(self):
         global_raid_data = RaidExt.new_raid_data
         # init scsi0 devices
-        status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi0 | awk \'{ print $6 }\' | cut -c2')
+        status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi6 | awk \'{ print $6 }\' | cut -c2')
         if status == 0 and stdout:
             lines = stdout.split("\n")  # like: 0,1,2,3
             length = len(lines)
             for item in [1, 2, 3, 4]:
                 if item <= length:
-                    global_raid_data[str(item)]['scsi'] = '0 0 ' + str(item - 1) + ' 0'
+                    global_raid_data[str(item)]['scsi'] = '6 0 ' + str(item - 1) + ' 0'
         # init scsi1 devices
-        status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi1 | awk \'{ print $6 }\' | cut -c2')
+        status, stdout, stderr = invoke_shell('cat /proc/scsi/scsi | grep scsi7 | awk \'{ print $6 }\' | cut -c2')
         if status == 0 and stdout:
             lines = stdout.split("\n")  # like: 0,1,2,3
             length = len(lines)
             for item in [5, 6, 7, 8]:
                 if item <= length:
-                    global_raid_data[str(item)]['scsi'] = '1 0 ' + str(item - 1) + ' 0'
+                    global_raid_data[str(item)]['scsi'] = '7 0 ' + str(item - 1) + ' 0'
 
         json_data = json.dumps(RaidExt.new_raid_data, indent = 4)
         print json_data

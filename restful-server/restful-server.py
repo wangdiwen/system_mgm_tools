@@ -10,13 +10,13 @@ from common import auth_list, invoke_shell
 from common.restfulclient import RestfulError
 
 from model.log.log import RestLog
-from common.deamon_task import LogClear
+from common.deamon_task import LogClear, NtpSync
 from model.storage.raid import RaidMonitor
 from model.storage.raid import ScsiMonitor
 
 #################################################################
 
-from common.global_helper import GlobalData, get_ntp_server, json_echo
+from common.global_helper import GlobalData, json_echo
 # check system has init the meta data or not
 from model.test.test import init_meta_data, detect_system_tools
 
@@ -164,32 +164,6 @@ class Auth_user():
     def DELETE(self):
         pass
 
-def ntp_sync():
-    ntp_info = get_ntp_server()
-    if ntp_info:
-        status = ntp_info['status']
-        server_list = ntp_info['ntp']
-        if status == 'on':
-            # check network, has connect to internet
-            # '1.cn.pool.ntp.org' is china ntp server center
-            status, stdout, stderr = invoke_shell('ping -c 1 -i 0.5 -w 1 -I eth0 1.cn.pool.ntp.org')
-            # print stdout
-            if status == 0 and len(server_list) > 0:
-                for addr in server_list:
-                    print 'sync time from : ' + addr + ' ...'
-                    sta, out, err = invoke_shell('ntpdate ' + addr)
-                    if sta == 0:
-                        print 'sync time from ' + addr + ' success'
-                        # put the system time to CMOS
-                        print 'record the system to CMOS ...'
-                        sta, out, err = invoke_shell('clock -w')
-                        if sta == 0:
-                            print 'record the sys to CMOS, success'
-                        break
-                    else:
-                        continue
-    return True
-
 def auth_processor(handler):
     path = web.ctx.path
     method = web.ctx.method
@@ -245,6 +219,10 @@ if __name__ == "__main__":
     logclear_process = LogClear(thread_lock, 'clear-log-disk')
     logclear_process.start()
 
+    # deamon threading task, ntp sync
+    ntp_process = NtpSync('ntp-sync')
+    ntp_process.start()
+
     # monitor the raid device status
     # raid_thread_lock = threading.Lock()
     # raid_monitor_process = RaidMonitor(raid_thread_lock, 'monitor_raid')
@@ -252,9 +230,6 @@ if __name__ == "__main__":
 
     scsi_monitor = ScsiMonitor()
     scsi_monitor.init_scsi_raid_map()
-
-    # sync ntp server, just sync once when server run
-    ntp_sync()
 
     # start restful server
     app.run()

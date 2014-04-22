@@ -54,6 +54,11 @@ start() {
     cd /usr/local/restful-server
     daemon /usr/local/restful-server/restful-server.py 88 >/dev/null 2>&1 &
     RETVAL=$?
+
+    # Note: just guarantee restful is first startup before other vmediax's software,
+    #       so, we use 'sleep' system tool to block the script
+    sleep 15
+
     ps -ef | grep restful | grep -v grep > /dev/null
     if [ "$?" == "0" ]; then
         echo "restful status => success"
