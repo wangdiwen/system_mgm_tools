@@ -92,7 +92,7 @@ def crawler_sys_meta():
 
     # 8. ntp server
     meta['system']['ntp-server'] = {}
-    meta['system']['ntp-server']['status'] = 'on'
+    meta['system']['ntp-server']['status'] = 'off'
     meta['system']['ntp-server']['ntp'] = []
     meta['system']['ntp-server']['ntp'].append('1.cn.pool.ntp.org')
     meta['system']['ntp-server']['ntp'].append('130.149.17.21')
