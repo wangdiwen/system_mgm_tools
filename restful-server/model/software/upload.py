@@ -143,11 +143,10 @@ def upload_install(data):
                 if sys_startup_mode == 'release':
                     raise RestfulError('580 Error: Current system mode is release, Cannot upgrade system manager tool')
                 nodeps = True
-            ret = rpm_update(save_file, nodeps)
-            if ret:
-                msg = 'upgrade ' + rpm_name + ' success'
-            else:
-                msg = '580 upgrade failed ' + rpm_name
+            ret, ret_msg = rpm_update(save_file, nodeps)   # return: (True, msg)
+            if not ret:
+                # msg = '580 upgrade failed ' + rpm_name
+                msg = '580 upgrade failed, ' + ret_msg
                 shutil.rmtree(save_dir)
                 raise RestfulError(msg)
         else:

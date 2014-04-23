@@ -171,9 +171,14 @@ def rpm_update(rpm_file, nodeps, old_package = False):
         if old_package:
             cmd += ' --oldpackage'
         status, stdout, stderr = invoke_shell(cmd)
-        if status == 0:
-            return True
-    return False
+        if status != 0:
+            msg = 'Message: '
+            if stdout:
+                msg += ' ' + stdout.strip()
+            if stderr:
+                msg += ' ' + stderr.strip()
+            return (False, msg)
+        return (True, 'success')
 
 def invoke_shell(cmd, wait = True):     # wait-> status=0; no wait-> status=None
     process = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
