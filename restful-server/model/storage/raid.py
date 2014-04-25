@@ -432,7 +432,7 @@ def active_new_disk(dev_name):  # like 'disk_1'
         status, stdout, stderr = invoke_shell('ps -ef | grep parted | grep -v grep | awk \'{ print $2 }\' | xargs kill -9')
 
     # 1, clear old partition info
-    clear_partion_cmd = 'parted -s /dev/' + dev_name + ' mklabel msdos &'
+    clear_partion_cmd = 'parted -s /dev/' + dev_name + ' mklabel gpt &'
     print clear_partion_cmd
     status, stdout, stderr = invoke_shell(clear_partion_cmd)
     if status == 0:
@@ -548,7 +548,7 @@ def check_new_disk_vol(dev_name):
     else:
         return 0
 
-def add_spare_disk(dev_name):
+def add_spare_disk(dev_name):                   # like: disk_1
     available_disk = available_system_disk()
     # print 'available_disk ...'
     # print available_disk
@@ -584,7 +584,7 @@ def add_spare_disk(dev_name):
         status, stdout, stderr = invoke_shell('ps -ef | grep parted | grep -v grep | awk \'{ print $2 }\' | xargs kill -9')
 
     # 1, clear old partition info
-    status, stdout, stderr = invoke_shell('parted -s /dev/' + dev_name + ' mklabel msdos')
+    status, stdout, stderr = invoke_shell('parted -s /dev/' + dev_name + ' mklabel gpt &')
     if status == 0:
         time.sleep(1)
         # 2, part new partition again
@@ -654,7 +654,7 @@ def add_spare_disk(dev_name):
                 sta, out, err = invoke_shell(shell_add)
             ret_sync = sync_run_config_file(run_file)
 
-        # here, update_scsi_num id
+        # here, update_scsi_num id ...
         # ret = update_scsi_num(dev_name)
         ret = new_update_scsi_num()
         # here, resize the md0 XFS file system
