@@ -80,7 +80,7 @@ function build_rpm_pkg() {
     # set the rpm build env
     which rpmbuild > /dev/null 2>&1
     [ "$?" != "0" ] && { error 'not rpmbuild tool, quit ...'; \
-		echo -e "y\n" | yum install rpm-build; \ 
+		echo -e "y\n" | yum install rpm-build; \
 		exit 1; }
 
     tips 'set rpm build env to local /root ...'
@@ -112,9 +112,12 @@ function build_rpm_pkg() {
     rpmbuild -bb $HOME/rpmbuild/SPECS/web-frontend.spec
     [ "$?" != "0" ] && { warning 'building web-frontend failed !'; exit 1; }
 
-    tips "copy rpm pkg to $HOME ..."
-    mv $HOME/rpmbuild/RPMS/x86_64/restful-server*.rpm $HOME
-    mv $HOME/rpmbuild/RPMS/x86_64/web-frontend*.rpm $HOME
+    tips 'clear cur dir rpm pkgs ...'
+    rm -f ./*.rpm
+
+    tips "copy rpm pkg to cur dir path ..."
+    mv $HOME/rpmbuild/RPMS/x86_64/restful-server*.rpm ./
+    mv $HOME/rpmbuild/RPMS/x86_64/web-frontend*.rpm ./
 
     tips 'building restful-server and web-frontend rpm, OK'
     exit 0
