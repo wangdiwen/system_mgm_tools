@@ -52,7 +52,8 @@ class NvidiaSettingInterface:
             if arg_list[0] in method_list:
                 func = getattr(nvidiasetting, arg_list[0])
                 if len(json_loaded_data) == 0:
-                    ret = func();
+                    # ret = func()                    # not support json '[]' param
+                    ret = ''
                 elif len(json_loaded_data) == 1:
                     ret = func(json_loaded_data[0]);
                 elif len(json_loaded_data) == 2:

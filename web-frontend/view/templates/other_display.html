@@ -42,7 +42,7 @@ function display_process()
             }});
 
             if (retcode)
-            { 
+            {
                 screens[i].width = parseInt(resolution[0])
                 screens[i].height = parseInt(resolution[1])
                 screens[i].refresh = parseInt(refresh)
@@ -117,7 +117,7 @@ function get_screen_by_index(ret_data, index)
 
 $$(document).ready(function() {
     $$("#vmxTab").vmxTab();
-    
+
     var ret = restful_ajax({url:"/model/system/info", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
     {
         retcode = false
@@ -138,15 +138,13 @@ $$(document).ready(function() {
             adaptor_type = "nvidia-setting";
         }
     }
-    
-    
-    
-    update_setting_info()
-    
-    var retcode = false
+
+    update_setting_info();
+
+    var retcode = false;
     var ret = restful_ajax({url:"/model/extend/" + adaptor_type + "/getScreenList", type:"GET", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
     {
-        retcode = false
+        retcode = false;
     }, success:function()
     {
         retcode = true;
@@ -154,47 +152,47 @@ $$(document).ready(function() {
     if (retcode)
     {
         $$("#info_table > fieldset").remove();
-        
+
         var ret_data = $$.parseJSON(ret)
         for (var i = 0; i < 8; i++)
         {
             if (1)//ret_data[i][2].length > 0
             {
-                
+
                 var screen_data = get_screen_by_index(ret_data, i);
-                
+
                 if (screen_data == null)
                 {
                     $$("#info_table").append(
-                        '<fieldset>' + 
-                            '<legend>通道' + i + '</legend>' + 
+                        '<fieldset>' +
+                            '<legend>通道' + i + '</legend>' +
                             '<label>此通道未接显示器</label>' +
                         '</fieldset>');
                     continue;
                 }
-                
-                
+
+
                 screens_has_display["typeid"] = screen_data[0]
-                
+
                 var _ret_data = get_resolution_list(screen_data[0]);
                 if (_ret_data != null)
                 {
                     //$$("#info_table > fieldset").remove();
                     $$("#info_table").append(
-                        '<fieldset>' + 
-                            '<legend>通道' + screen_data[0] + '</legend>' + 
-                            '&nbsp;<label>分辨率' + 
-                            '<select id="resolution_' + screen_data[0] + '">' + 
-                            '</select></label> ' + 
-                            '&nbsp;<label>刷新率' + 
-                            '<select id="refresh_' + screen_data[0] + '">' + 
-                            '</select></label>' + 
+                        '<fieldset>' +
+                            '<legend>通道' + screen_data[0] + '</legend>' +
+                            '&nbsp;<label>分辨率' +
+                            '<select id="resolution_' + screen_data[0] + '">' +
+                            '</select></label> ' +
+                            '&nbsp;<label>刷新率' +
+                            '<select id="refresh_' + screen_data[0] + '">' +
+                            '</select></label>' +
                             '&nbsp;<label>显示器型号:</label><label id="display_label_' + screen_data[0] + '"></label>&nbsp;' +
                            // '<label>接口类型:</label><label id="port_label_' + ret_data[i][0] + '"></label>' +
                         '</fieldset>');
 
                     var _ret_data_current = get_current_resolution(screen_data[0]);
-                    
+
                     var obj = {};
                     obj.resolution = _ret_data;
                     obj.typeid = screen_data[0]
@@ -202,10 +200,10 @@ $$(document).ready(function() {
                     obj.height = _ret_data_current[1]
                     obj.refresh = _ret_data_current[2]
                     screens[screens.length] = obj;
-                    
+
                     if (adaptor_type == "nvidia-setting")
                         $$("#refresh_" + screen_data[0]).append('<option value="0" ' + (_ret_data_current[2]==0?'selected="selected"':'') +'>AUTO</option>');
-                        
+
                     for (var j = 0; j < _ret_data.length; j++)
                     {
                         var is_cur_resolution = false;
@@ -265,23 +263,19 @@ $$(document).ready(function() {
                     if (adaptor_type == "nvidia-setting")
                         if (screen_data[2].length > 0)
                             $$("#display_label_" + screen_data[0]).html(screen_data[2][0]);
-                    
+
                     if (adaptor_type == "ati-setting")
                     {
                         if (screen_data[1].length > 0)
                             $$("#display_label_" + screen_data[0]).html(screen_data[1][0]);
-                            
+
                             //port_label_
                     }
                 }
             }
-                
+
         }
     }
-
-
-
-    
 });
 </script>
 </head>
@@ -302,7 +296,7 @@ $$(document).ready(function() {
                 <table width="550" height="100" border="0" align="center" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="left" id="info_table">
-                        
+
                       </td>
                     </tr>
                     <tr>
