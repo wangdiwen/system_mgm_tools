@@ -145,7 +145,7 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'timeout 5 mount -t nfs -o intr,soft,timeo=1,retrans=2,retry=0 ' + device + ' ' + mount_point
+        cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=1,retrans=2,retry=0 ' + device + ' ' + mount_point
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
@@ -164,10 +164,33 @@ def mount(info):
                 raise RestfulError(msg)
             return True
         else:
-            # del the tmp mount point
-            if already_has_mount_point:
-                shutil.rmtree(mount_point)
-            return False
+            # Note: The default NFS client version is NFSv4, but sometime it cannot mount success,
+            #     Then we try use version 3 to mount, if not ok, we have nothing to it.
+            #     The params '-o' is 'vers=4/3'
+            if stderr and re.compile('.*Input/output error.*').match(stderr):
+                cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=1,retrans=2,retry=0,vers=3 ' + device + ' ' + mount_point
+                # print cmd
+                status, stdout, stderr = invoke_shell(cmd)
+                if status == 0:
+                    if startup == 'on':
+                        has_fstab = has_mount_record(mount_point)
+                        if not has_fstab:
+                            # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
+                            fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=1,retrans=2,retry=0,vers=3 0 0'
+                            # print fstab
+                            record_mount_log(fstab)
+
+                    # add or config the new permission
+                    ret_permission = add_permission(type, mount_point, permission)
+                    if not ret_permission:
+                        msg = '580 config mount point permission failed'
+                        raise RestfulError(msg)
+                    return True
+            else:
+                # del the tmp mount point
+                if already_has_mount_point:
+                    shutil.rmtree(mount_point)
+                return False
     elif type == 'samba':
         if not re.compile("^\/\/").match(device):
             return False
