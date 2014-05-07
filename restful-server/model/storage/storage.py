@@ -331,7 +331,7 @@ class StorageExt:
         input['type'] = arg
         ret = mount(input)
         if ret:
-            return
+            return 'success'
         else:
             error('mount failed')
 

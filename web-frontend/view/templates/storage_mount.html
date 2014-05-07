@@ -24,11 +24,11 @@ function umount_process(grid) {
         return;
     //$$.each($$('.trSelected', grid), function(key, value){
         var mount_point = $$(grid).get(0).children[5].innerText.replace("\n", '');
-            
+
         var data = ""
         data += '{"mount-point":"' + mount_point + '"';
         data += '}';
-    
+
         var ret = restful_ajax({url:"/model/storage", type:"DELETE", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
         {
             alert(errorThrown)
@@ -45,14 +45,14 @@ function load_ui()
     $$("#mount_type > option").remove();
     //$$("#mount_point > option").remove();
     $$("#device_ui").show();
-    
+
     $$("#user_ui").hide();
     $$("#passwd_ui").hide();
     $$("#mount_type_ui").show();
     $$("#mount_point_ui").show();
-    
+
     $$("#info_table").attr("height", 240);
-    
+
     if (device_type == "disk")
     {
         $$("#mount_type").append('<option value="ext3" selected="selected">ext3</option>');
@@ -98,7 +98,7 @@ function load_ui()
 $$(document).ready(function() {
     $$("#grid").vmxGrid({
         url : '/model/storage',
-        title: "设备管理", 
+        title: "设备管理",
         colModel : [
             {
                 display : '设备名',
@@ -136,13 +136,13 @@ $$(document).ready(function() {
                 align : 'left'
             }
         ],
-        buttons : [ 
+        buttons : [
         {
             name : '删除',
             bclass : 'del',
             onpress : umount_process
         }],
-        foot:[ 
+        foot:[
         {
             name : '挂载',
             bclass : 'add',
@@ -157,7 +157,7 @@ $$(document).ready(function() {
             var mount_point = $$("#mount_point").val();
             var startup = $$("#startup").val();
             var permission = $$("#permission").val();
-            
+
             var user = $$("#user").val();
             var passwd = $$("#passwd").val();
 
@@ -167,10 +167,10 @@ $$(document).ready(function() {
                 return;
             }
             mount_point = "/mnt/" + mount_point
-            
+
             if (device_type == "tmpfs")
                 device = "tmpfs"
-            
+
             var retcode = true;
             var data = ""
             data += '{"device":"' + device + '","startup":"' + startup + '"';
@@ -178,28 +178,28 @@ $$(document).ready(function() {
                 data += ',"device-type":"' + mount_type + '"';
             if ($$("#mount_point_ui").is(":visible"))
                 data += ',"mount-point":"' + mount_point + '"';
-            
+
             if (user != "")
                 data += ',"username":"' + user + '"';
             if (passwd != "")
                 data += ',"password":"' + passwd + '"';
-                
+
             if (permission != "null")
                 data += ',"permission":"' + permission + '"';
-                
+
             data += '}';
-            
-            var ret = restful_ajax({url:"/model/storage/" + device_type, type:"POST", data:data, async:true, error:function(XMLHttpRequest, textStatus, errorThrown)
+
+            var ret = restful_ajax({url:"/model/storage/" + device_type, type:"POST", data:data, async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
             {
                 alert(errorThrown);
             }, success:function()
             {
                 alert("挂载成功！")
-                $$("#grid").vmxGridReload();
                 $$("#dialog").dialog( "close" );
+                $$("#grid").vmxGridReload();
             }});
             event.preventDefault();
-            
+
     });
     load_ui();
     $$("#device_type").change(function()
@@ -253,11 +253,12 @@ $$(document).ready(function() {
           <td align="left">挂载点权限</td>
           <td align="left">
             <select id="permission" class="ui-widget ui-widget-content ui-corner-all">
-                <option value="null" selected="selected">默认(可执行)</option>
-                <option value="read-only">只读</option>
+<!--                 <option value="null" selected="selected">读写/可执行</option> -->
+                <option value="read-write-exec">读写/可执行(Default)</option>
                 <option value="read-write">读写</option>
+                <option value="read-only">只读</option>
                 <option value="read-exec">可执行</option>
-                <option value="read-write-exec">读写/可执行</option>
+
              </select>
           </td>
         </tr>
