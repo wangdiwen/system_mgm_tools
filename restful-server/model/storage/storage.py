@@ -147,10 +147,11 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=20,retrans=2,retry=0,nolock ' + device + ' ' + mount_point
+        cmd = 'timeout 10 mount -v -t nfs -o intr,soft,timeo=20,retrans=2,retry=0,nolock ' + device + ' ' + mount_point
         print 'try nfs v4 ...'
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
+        # print stderr.replace("\n", ', ')
         if status == 0:
             if startup == 'on':
                 has_fstab = has_mount_record(mount_point)

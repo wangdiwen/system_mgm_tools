@@ -37,10 +37,10 @@ function ajaxFileUpload()
             if(typeof(data.error) != 'undefined'
                 && data.error != '')
             {
-                alert("上传失败:" + data.error);
+                alert("安装 失败:" + data.error);
             }else
             {
-                alert("上传成功");
+                alert("安装 成功");
                 $$("#grid").vmxGridReload();
             }
         },
@@ -131,16 +131,16 @@ function ajax_iso_upload() {
             if(typeof(data.error) != 'undefined'
                 && data.error != '')
             {
-                alert("上传失败:" + data.error);
+                alert("安装 失败:" + data.error);
             }else
             {
-                alert("上传成功");
+                alert("安装 成功");
                 $$("#grid").vmxGridReload();
             }
         },
         error: function (data, status, e)
         {
-            alert("error 上传失败");
+            alert("Error 安装 失败");
         }
     });
 }
@@ -197,7 +197,7 @@ $$(document).ready(function() {
         foot:[
         {
             html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
-                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="上传" onclick="upload();" />' +
+                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="安装" onclick="upload();" />' +
                 '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + '</form><br />' +
 
                 '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
