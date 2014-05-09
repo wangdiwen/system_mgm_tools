@@ -286,15 +286,20 @@ def add_permission(device_type, mount_point, permission):
     per_map['read-exec'] = '755'
     per_map['read-write-exec'] = '757'
 
-    cmd_own = 'chown -R mmap.mmap ' + mount_point + ' &'
+    cmd_own = ''
     cmd_mod = ''
+
+    status, stdout, stderr = invoke_shell('cat /etc/passwd | grep mmap')
+    if status == 0:
+        cmd_own = 'chown -R mmap.mmap ' + mount_point + ' &'
+
     if not permission:
         cmd_mod = 'chmod -R ' + per_map['read-exec'] + ' ' + mount_point + ' &'
     else:
         cmd_mod = 'chmod -R ' + per_map[permission] + ' ' + mount_point + ' &'
 
-    status, stdout, stderr = invoke_shell(cmd_own, False)
     status, stdout, stderr = invoke_shell(cmd_mod, False)
+    status, stdout, stderr = invoke_shell(cmd_own, False)
     return True
 
 def swap_device_list():

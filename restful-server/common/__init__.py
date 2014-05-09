@@ -181,14 +181,17 @@ def rpm_update(rpm_file, nodeps, old_package = False):
         return (True, 'success')
 
 def invoke_shell(cmd, wait = True):     # wait-> status=0; no wait-> status=None
-    process = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout = ''
     status = 0
     stderr = ''
-    if wait:
-        process.wait()
-    status = process.returncode
-    stdout, stderr = process.communicate()
+    if cmd:
+        process = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+        if wait:
+            process.wait()
+        status = process.returncode
+        stdout, stderr = process.communicate()
+    else:
+        status = 1
     return (status, stdout.rstrip("\n"), stderr.rstrip("\n"))
 
 def get_key_value(file_name, exp_rule, separator):
