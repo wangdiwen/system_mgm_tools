@@ -147,7 +147,7 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=2,retrans=2,retry=0,nolock ' + device + ' ' + mount_point
+        cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=20,retrans=2,retry=0,nolock ' + device + ' ' + mount_point
         print 'try nfs v4 ...'
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
@@ -156,7 +156,7 @@ def mount(info):
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
                     # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
-                    fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=2,retrans=2,retry=0,nolock 0 0'
+                    fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=20,retrans=2,retry=0,nolock 0 0'
                     # print fstab
                     record_mount_log(fstab)
 
@@ -176,7 +176,7 @@ def mount(info):
             #     Then we try use version 3 to mount, if not ok, we have nothing to it.
             #     The params '-o' is 'vers=4/3'
             if stderr and re.compile(".*Input/output error.*").match(stderr.replace("\n", '')):
-                cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=2,retrans=2,retry=0,vers=3,nolock ' + device + ' ' + mount_point
+                cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=20,retrans=2,retry=0,vers=3,nolock ' + device + ' ' + mount_point
                 print 'try nfs v3 ...'
                 # print cmd
                 status, stdout, stderr = invoke_shell(cmd)
@@ -187,7 +187,7 @@ def mount(info):
                         has_fstab = has_mount_record(mount_point)
                         if not has_fstab:
                             # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
-                            fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=2,retrans=2,retry=0,vers=3,nolock 0 0'
+                            fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=20,retrans=2,retry=0,vers=3,nolock 0 0'
                             # print fstab
                             record_mount_log(fstab)
 
@@ -218,14 +218,14 @@ def mount(info):
     elif type == 'samba':
         if not re.compile("^\/\/").match(device):
             return False
-        cmd = 'timeout 5 mount -t cifs ' + device + ' ' + mount_point + ' -o username=' + username + ',password=' + password +',uid=mmap,gid=mmap,intr,soft,timeo=1,retrans=1,retry=0'
+        cmd = 'timeout 5 mount -t cifs ' + device + ' ' + mount_point + ' -o username=' + username + ',password=' + password +',uid=mmap,gid=mmap,intr,soft,timeo=10,retrans=1,retry=0'
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
         if status == 0:
             if startup == 'on':
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
-                    fstab = device + ' ' + mount_point + ' cifs username=' + username + ',password=' + password + ',uid=mmap,gid=mmap,intr,bg,soft,timeo=1,retrans=1,retry=0' + '  0 0'
+                    fstab = device + ' ' + mount_point + ' cifs username=' + username + ',password=' + password + ',uid=mmap,gid=mmap,intr,bg,soft,timeo=10,retrans=1,retry=0' + '  0 0'
                     # print fstab
                     record_mount_log(fstab)
 
