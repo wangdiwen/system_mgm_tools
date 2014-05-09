@@ -48,6 +48,7 @@ import model.software.upload as model_software_upload
 import model.software.uninstall as model_software_uninstall
 import model.software.startup as model_software_startup
 import model.software.service as model_software_service
+import model.software.rpmiso as model_software_rpmiso
 
 import model.storage.raid as model_storage_raid
 import model.storage.storage as model_storage_storage
@@ -101,6 +102,7 @@ urls = (
     '/software/startup', model_software_startup.app,
     '/software/service', model_software_service.app,
     '/software/rpminfo', model_software_softinfo.app,
+    '/software/rpmiso', model_software_rpmiso.app,
 
     '/storage/raid', model_storage_raid.app,
     '/storage', model_storage_storage.app,

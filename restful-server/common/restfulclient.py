@@ -24,5 +24,5 @@ class RestfulClient:
 
 class RestfulError(web.HTTPError):
     def __init__(self, status):
-        # headers = {'Content-Type': 'text/json'}
+        headers = {'Content-Type': 'text/html'}
         web.HTTPError.__init__(self, status)

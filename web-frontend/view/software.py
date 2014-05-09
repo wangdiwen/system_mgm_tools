@@ -9,6 +9,7 @@ urls = (
   "/upload", "Upload",
   "/service", "Service",
   "/startup", "Startup",
+  '/rpmiso', 'Rpmiso',
 )
 
 class Upload:
@@ -29,12 +30,28 @@ class Upload:
             if res == "":
                 res = "{}"
             return res
-        
+
+class Rpmiso:
+    def POST(self):
+        try:
+            headers = {}
+            data = web.data()
+            data_array = data[0:128].split('\n');
+            headers["Content-Type"] = "multipart/form-data; boundary=" + data_array[0][2:]
+            res = RestfulClient.getresponse("POST", "/software/rpmiso", data, headers)
+        except Exception as e:
+            return "{\"error\":\"" + e.message + "\"}"
+            #raise RestfulError(e.message)
+        else:
+            if res == "":
+                res = "{}"
+            return res
+
 class Service:
     def GET(self):
         render = web.template.frender("./view/templates/software_services.html")
         return render()
-            
+
 class Startup:
     def GET(self):
         render = web.template.frender("./view/templates/software_startup.html")

@@ -1,0 +1,4 @@
+[local-iso-rpm-repo]
+name=local-iso-rpm-repo
+baseurl=file:///isorepo/repo
+gpgcheck=0

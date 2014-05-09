@@ -110,6 +110,72 @@ function detail_process(grid)
     }
 }
 
+/////////////////////////////////////////////////////////////////////
+function ajax_iso_upload() {
+    $$("#iso_loading").ajaxStart(function(){
+        $$("#upload_iso_file").attr("disabled", true)
+        $$("#btn_iso_upload").attr("disabled", true)
+        $$(this).show();
+    }).ajaxComplete(function(){
+        $$("#upload_iso_file").attr("disabled", false)
+        $$("#btn_iso_upload").attr("disabled", false)
+        $$(this).hide();
+    });
+    $$.ajaxFileUpload({
+        url:'/view/software/rpmiso',
+        secureuri:false,
+        fileElementId:'upload_iso_file',
+        dataType: 'json',
+        success: function (data, status)
+        {
+            if(typeof(data.error) != 'undefined'
+                && data.error != '')
+            {
+                alert("上传失败:" + data.error);
+            }else
+            {
+                alert("上传成功");
+                $$("#grid").vmxGridReload();
+            }
+        },
+        error: function (data, status, e)
+        {
+            alert("error 上传失败");
+        }
+    });
+}
+function rpm_iso_upload() {
+    var file = $$("#upload_iso_file").val();
+    if (typeof(file) == "undefined" || file == "")
+    {
+        alert("请选择要上传的文件");
+        return;
+    }
+
+    ajax_iso_upload();
+}
+
+function clear_iso_mount() {
+    var ret = restful_ajax({url:"/model/software/rpmiso", type:"DELETE", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        retcode = false;
+    }, success:function()
+    {
+        retcode = true;
+    }});
+
+    var msg = '';
+    if (retcode) {
+        msg = '清理本次ISO挂载，成功！';
+    }
+    else {
+        msg = '清理本次ISO挂载，失败！';
+    }
+    alert(msg);
+}
+/////////////////////////////////////////////////////////////////////
+
+
 $$(document).ready(function() {
 
     $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
@@ -132,9 +198,13 @@ $$(document).ready(function() {
         {
             html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
                 '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="上传" onclick="upload();" />' +
-                //'<input id="checkbox" type="checkbox" value="" />Develop升级模式' +
-                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' +
-            '</form>'
+                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + '</form><br />' +
+
+                '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
+                '<input type="file" id="upload_iso_file" name="upload_iso_file" /><input type="button" id="btn_iso_upload" class="upload" value="上传 ISO 软件仓库" onclick="rpm_iso_upload();" />' +
+                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="iso_loading" style="display:none;" />&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
+
+                '<input type="button" id="btn_clear" class="clear_upload" value="清理本次 ISO 仓库挂载" onclick="clear_iso_mount();" />' + '</form><br />'
         }]
     });
 });
