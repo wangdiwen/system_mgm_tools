@@ -292,7 +292,7 @@ def add_permission(device_type, mount_point, permission):
     else:
         cmd = 'chown -R mmap.mmap ' + mount_point \
                  + ' && ' + 'chmod -R ' + per_map[permission] + ' ' + mount_point
-    status, stdout, stderr = invoke_shell(cmd)
+    status, stdout, stderr = invoke_shell(cmd, False)
     # if status != 0:         # drop this permission error
     #     return False
     return True
