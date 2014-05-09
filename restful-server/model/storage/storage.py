@@ -298,7 +298,7 @@ def add_permission(device_type, mount_point, permission):
     else:
         cmd_mod = 'chmod -R ' + per_map[permission] + ' ' + mount_point + ' &'
 
-    status, stdout, stderr = invoke_shell(cmd_mod, False)
+    status, stdout, stderr = invoke_shell(cmd_mod, False)       # not block process
     status, stdout, stderr = invoke_shell(cmd_own, False)
     return True
 
