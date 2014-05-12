@@ -32,13 +32,14 @@ error() { echo "${COLOR_RED}$*${COLOR_RESET}"; }
 
 function usage() {
     cat << HELP
-    Usge: ./build_iso_repo.sh -p <path to rpm repo dir>
+    Usge: ./build_iso_repo.sh -p <path to rpm repo dir> -n <iso name>
           -h | --help for help
 HELP
+    exit 0
 }
 
 g_rpm_repo_dir=
-g_iso_name="./vmediax-rpm-repo.iso"
+g_iso_name=
 
 function set_repo_path() {
     [ ! -d $1 ] || [ -z $1 ] && {
@@ -47,6 +48,13 @@ function set_repo_path() {
     }
 
     g_rpm_repo_dir=$1
+}
+function set_repo_name() {
+    [ -z $1 ] && {
+        error "not give invalid iso name"
+        usage
+    }
+    g_iso_name=$1
 }
 
 function build_iso_file() {
@@ -73,6 +81,10 @@ function build_iso_file() {
         yum -y install genisoimage
     }
 
+    tips 'create Setup config file in iso ...'
+    local product=${g_iso_name%%.*}
+    echo "$product" > $g_rpm_repo_dir/Setup
+
     mkisofs -o $g_iso_name -N -no-iso-translate -J -R $g_rpm_repo_dir
     [ "$?" != "0" ] && {
         error "create iso file $g_iso_name failed ... Pls check something wrong !"
@@ -85,7 +97,7 @@ function build_iso_file() {
                     # The Logic Process
 ###############################################################################
 
-[ "$#" -ne "2" ] && { error 'prams error !'; usage; exit 1; }
+[ "$#" -ne "4" ] && { error 'prams error !'; usage; exit 1; }
 
 user=`whoami`
 tips "Welcome ... $user"
@@ -97,6 +109,9 @@ while [[ -n "$1" ]]; do
         -h | --help ) usage; exit 0;
             ;;
         -p) set_repo_path $2; shift 2;
+            ;;
+        -n) set_repo_name $2; shift 2;
+            ;;
     esac
 done
 

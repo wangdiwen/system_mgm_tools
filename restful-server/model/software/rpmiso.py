@@ -61,6 +61,7 @@ def create_iso_yum_repo():
 def recovery_rpmdb():
     rpmdb_bak_path = '/opt/system/conf/rpmdb_bak'
     if not os.path.isdir(rpmdb_bak_path):
+        clean_all()
         raise RestfulError('580 Error: cannot find rpm database path, no ' + rpmdb_bak_path)
 
     # recovery to first time
@@ -72,6 +73,27 @@ def recovery_rpmdb():
         return False
     return True
 
+def recovery_product(iso_mount_point):
+    # find 'Setup' product file in iso
+    setup_file = iso_mount_point + '/Setup'
+    if not os.path.isfile(setup_file):
+        clean_all()
+        raise RestfulError('580: Error: cannot find Setup product file in ISO')
+
+    product = ''
+    sta, out, err = invoke_shell('cat ' + setup_file + ' | head -n 1')
+    if sta == 0 and out:
+        product = out.strip()
+    if product:
+        cmd_yum = 'yum -y install ' + product
+        print cmd_yum
+        sta, out, err = invoke_shell(cmd_yum)
+        print '=========== YUM INFO ==========='
+        print out
+        print err
+        if sta == 0:
+            return True
+    return False
 
 def install_iso_repo(data):
     mem_point = '/isorepo'
@@ -108,11 +130,15 @@ def install_iso_repo(data):
     ret = mount_iso(iso_save_file, iso_mount_point)
     if ret:
         # create yum repo file
-        ret_repo = create_iso_yum_repo()
-        if ret_repo:
-            # recovery the rpm db to factory settings
-            ret = recovery_rpmdb()
-            return True
+        # ret_repo = create_iso_yum_repo()
+        # if ret_repo:
+        #     # recovery the rpm db to factory settings
+        #     ret_1 = recovery_rpmdb()
+        #     # recovery the iso product
+        #     ret_2 = recovery_product(iso_mount_point)
+        #     if ret_2:
+        #         return True
+        return True             # for test
     return False
 
 def clean_all():
@@ -135,7 +161,7 @@ def clean_all():
         sta, out, err = invoke_shell(cmd)
 
     return True
-
+##############################################################################
 
 class Rpmiso:
     def GET(self):          # just for test

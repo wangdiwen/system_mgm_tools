@@ -8,13 +8,12 @@
 <script src="/view/templates/js/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
 <script src="/view/templates/js/common.js"></script>
 <script src="/view/templates/js/ajaxfileupload.js"></script>
+
+<!-- <link rel="stylesheet" type="text/css" href="/view/templates/html5uploader/html5uploader.css"/>
+<script type="text/javascript" src="/view/templates/html5uploader/jquery.html5uploader.js"></script> -->
+
 <title>软件包管理</title>
 
-<style type="text/css">
-<!--
-
--->
-</style>
 <script>
 function ajaxFileUpload()
 {
@@ -62,6 +61,7 @@ function upload()
 
         ajaxFileUpload();
 }
+
 function uninstall(grid)
 {
         var software = $$(grid).get(0).children[1].innerText.replace("\n", '');
@@ -177,8 +177,7 @@ function clear_iso_mount() {
 
 
 $$(document).ready(function() {
-
-    $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
+    $$("#dialog").dialog({autoOpen: false, modal: true, width:800});
 
     $$("#grid").vmxGrid({
         url : '/model/software/uninstall',
@@ -198,7 +197,7 @@ $$(document).ready(function() {
         {
             html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
                 '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="安装" onclick="upload();" />' +
-                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + '</form><br />' +
+                '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + '</form>'+
 
                 '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
                 '<input type="file" id="upload_iso_file" name="upload_iso_file" /><input type="button" id="btn_iso_upload" class="upload" value="上传 ISO 软件仓库" onclick="rpm_iso_upload();" />' +
@@ -207,10 +206,6 @@ $$(document).ready(function() {
                 '<input type="button" id="btn_clear" class="clear_upload" value="清理本次 ISO 仓库挂载" onclick="clear_iso_mount();" />' + '</form><br />'
         }]
     });
-});
-
-
-
 </script>
 </head>
 
@@ -228,5 +223,8 @@ $$(document).ready(function() {
     </table>
 </div>
 <div id="grid"></div>
+
+<div id="upload"></div>
+
 </body>
 </html>

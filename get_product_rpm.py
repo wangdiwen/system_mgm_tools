@@ -42,6 +42,14 @@ def get_teminal_input(tips = 'Pls input', options = ['y', 'n', 'yes', 'no'], aut
             break
     return data
 
+def get_input(tips = 'Pls input'):
+    data = ''
+    while True:
+        data = raw_input(tips + ': ')
+        if data.strip():
+            break
+    return data.strip()
+
 class Color:
     BLACK = 0
     RED = 1
@@ -121,7 +129,21 @@ def get_rpm_name_list(pro_lines):
 def check_has_rpm(rpm_name):
     sta, out, err = shell_cmd('yum search ' + rpm_name)
     if sta == 0:
-        return True
+        # check has many software ?
+        data = []
+        rule = re.compile('^' + rpm_name)
+        lines = out.split("\n")
+        for line in lines:
+            if rule.match(line):
+                data.append(line)
+        if len(data) > 1:
+            warning('check too many software, which do your choice ?')
+            i = 0
+            for item in data:
+                i = i + 1
+                warning("%d : %s" % (i, item))
+        else:
+            return True
     return False
 
 def download_rpm(rpm_list, path):
@@ -141,27 +163,26 @@ def download_rpm(rpm_list, path):
         cmd = 'yumdownloader ' + item + ' --destdir=' + path
         sta = shell_cmd(cmd, True, 1)
         if sta == 0:
-            tips('download ' + item + ' ok')
+            tips('download ' + item + "\t\t OK")
             ok_count = ok_count + 1
         else:
-            warning('download ' + item + ' failed')
+            warning('download ' + item + "\t\t Failed")
 
     return ok_count
 
 
 # ==============================================================================
 
-product_name = 'mrs-4000-os'                            # define your product rpm name
+product_name = ''                            # define your product rpm name
+product_name = get_input('Pls input your product software name')
 
 has_pro = check_has_rpm(product_name)
 if not has_pro:
-    error('not find this product ' + product_name)
+    error('not find valid product ' + product_name)
     quit(1, 'bye')
 
 pro_lines = get_product_info(product_name)
 if pro_lines:
-    # for line in pro_lines:
-        # print line
     print 'Total packages = %d' % len(pro_lines)
 
     print ''
@@ -170,6 +191,7 @@ if pro_lines:
 
     if len(pro_lines) == len(rpm_list):
         tips('====== > Check success !')
+        tips('Check valid dependency rpm pkgs ===>')
         print rpm_list
     else:
         error('Total packages cannot equal final packages')
@@ -177,6 +199,8 @@ if pro_lines:
 
     # download the rpm packages
     down_path = './repo'
+    iso_name = product_name + '.iso'
+
     count = download_rpm(rpm_list, down_path)
     tips("")
     tips('=== total to download        : %d' % len(pro_lines))
@@ -185,14 +209,25 @@ if pro_lines:
     tips('')
 
     tips('=== Now, Building ISO file ...')
+    tips('=== ISO Name : ' + iso_name)
+
+
     build_script = './build_iso_repo.sh'
     if os.path.isfile(build_script):
-        sta, out, err = shell_cmd(build_script + ' -p ' + down_path)
+        # check build shell script ?
+        err = shell_cmd('bash -n ' + build_script, True, 3)
+        if err:
+            error(err)
+            quit(1, 'script error !')
+        sta, out, err = shell_cmd(build_script + ' -p ' + down_path + ' -n ' + iso_name)
         print out
         if sta == 0:
             tips("=== Building ISO success")
         else:
-            warning('=== Building ISO failed')
+            error('=== Building ISO failed')
     else:
         warning('cannot find build iso script ' + build_script)
-    tips('over')
+    tips('clean tmp files ...')
+    if os.path.isdir(down_path):
+        sta = shell_cmd('rm -rf ' + down_path, True, 1)
+    tips('=== over ===')
