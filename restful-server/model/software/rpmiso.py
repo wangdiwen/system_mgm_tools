@@ -178,7 +178,10 @@ class Rpmiso:
     def PUT(self):
         pass
     def POST(self):
+        print 'fuck'
+        # data = web.input(upload_iso_file = {})
         data = web.input(upload_iso_file = {})
+        print 'you'
         ret = install_iso_repo(data)
         return ''
 

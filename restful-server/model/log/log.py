@@ -6,6 +6,7 @@ import time
 import subprocess
 import re
 import json
+import sys
 
 class RestLog():
     log_file = '/opt/system/log/restful-server/restful.log'
@@ -26,15 +27,19 @@ class RestLog():
         user_ip = web.cookies().get('ip') if web.cookies().get('ip') else web.ctx.env['REMOTE_ADDR']
         http_code = web_env['status'].replace("\n", "")
 
-        input_data = web.data()
-        input_data = input_data.replace("\n", "")
+        try:
+            input_data = web.data()
+            input_data = input_data.replace("\n", "")
 
-        log_msg = '['+cur_time+'] ('+user_ip+') '+re_pro.upper()+' '+re_method+' '+re_path+' Data: ['+input_data+']'+' -- '+http_code
-        # print log_msg
-        if not re_method == 'GET' and not re_path == '/auth':
-            file = open(RestLog.log_file, 'a')
-            file.write(log_msg.strip()+"\n")
-            file.close()
+            log_msg = '['+cur_time+'] ('+user_ip+') '+re_pro.upper()+' '+re_method+' '+re_path+' Data: ['+input_data+']'+' -- '+http_code
+            # print log_msg
+            if not re_method == 'GET' and not re_path == '/auth':
+                file = open(RestLog.log_file, 'a')
+                file.write(log_msg.strip()+"\n")
+                file.close()
+        except UnicodeDecodeError:
+            pass
+
 
     @staticmethod
     def debug(msg):
