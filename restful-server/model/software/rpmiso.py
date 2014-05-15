@@ -95,14 +95,14 @@ def recovery_product(iso_mount_point):
         product = out.strip()
     if product:
         cmd_yum = 'yum clean all && yum -y install ' + product
-        print cmd_yum
         sta, out, err = invoke_shell(cmd_yum)
         print '=========== YUM INFO ==========='
         print out
         print err
-        if sta == 0:
-            return True
-    return False
+        if sta != 0:
+            raise RestfulError("580 Error: \n"+out+err)
+            return False
+    return True
 
 def check_dev_mode():
     sta, out, err = invoke_shell('df -h | grep -E "^/dev/sd[a-z][0-9].*/$"')
