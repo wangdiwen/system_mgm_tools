@@ -12,4 +12,12 @@ expect {
     }
 }
 
+puts "\nSync the mgm tools ..."
+spawn scp -P 22222 -r restful-server web-frontend 10.4.89.200:/usr/local
+expect {
+    "*password:" {
+        send "$passwd\n"
+    }
+}
+
 expect eof

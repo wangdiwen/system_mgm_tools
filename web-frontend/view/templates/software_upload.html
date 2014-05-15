@@ -14,13 +14,12 @@
 <script src="/view/templates/js/common.js"></script>
 <script src="/view/templates/js/ajaxfileupload.js"></script>
 
-<!-- <script src="/view/templates/uploadify/jquery.uploadify.js"></script> -->
-<!-- <script src="/view/templates/uploadify/jquery-1.9.1.js"></script> -->
-<!-- <script src="/view/templates/uploadify/jquery.uploadify.min.js"></script> -->
 
 <script type="text/javascript" src="/view/templates/plupload-2.1.1/js/plupload.full.min.js"></script>
-<script type="text/javascript" src="/view/templates/plupload-2.1.1/js/jquery.ui.plupload/jquery.ui.plupload.js"></script>
 <script type="text/javascript" src="/view/templates/plupload-2.1.1/js/i18n/zh_CN.js"></script>
+<script type="text/javascript" src="/view/templates/plupload-2.1.1/js/jquery.ui.plupload/jquery.ui.plupload.js"></script>
+
+
 
 <title>软件包管理</title>
 
@@ -126,30 +125,28 @@ function detail_process(grid)
 
 /////////////////////////////////////////////////////////////////////
 
-function clear_iso_mount() {
-    var ret = restful_ajax({url:"/model/software/rpmiso", type:"DELETE", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+function recovery_iso() {
+    var retcode = false;
+    var ret = restful_ajax({url:"/model/software/rpmiso", type:"PUT", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
     {
-        retcode = false;
+        alert(errorThrown);
     }, success:function()
     {
         retcode = true;
     }});
 
-    var msg = '';
     if (retcode) {
-        msg = '清理本次ISO挂载，成功！';
+        alert('ISO 恢复，成功！');
     }
-    else {
-        msg = '清理本次ISO挂载，失败！';
-    }
-    alert(msg);
 }
+
 /////////////////////////////////////////////////////////////////////
 
 
 $$(document).ready(function() {
 
     $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
+    // $$("#log" ).dialog({autoOpen: true, modal: false, width:800});
 
     $$("#grid").vmxGrid({
         url : '/model/software/uninstall',
@@ -168,20 +165,22 @@ $$(document).ready(function() {
         foot:[
         {
             html: '<form name="form" action="" method="POST" enctype="multipart/form-data">' +
-                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="上传" onclick="upload();" />' +
+                '<input type="file" id="upload_file" name="upload_file" /><input type="button" id="btn" class="upload" value="升级软件" onclick="upload();" />' +
                 '<img src="/view/templates/images/loading.gif" name="loading" align="absmiddle" id="loading" style="display:none;" />' + '</form><br />'
         }]
     });
 
-    $$('#uploader').plupload({
+    $$('#upload_iso_file').plupload({
         // General settings
-        runtimes : 'flash,html4',
+        // runtimes : 'flash,html4',
+        runtimes: 'gears,flash,silverlight,browserplus,html5',
         url : "/view/software/rpmiso",
 
         // Maximum file size
         max_file_size : '1000mb',
+        multipart : true,
 
-        chunk_size: '1mb',
+        chunk_size: '100kb',
 
         // Resize images on clientside if we can
         resize : {
@@ -214,10 +213,43 @@ $$(document).ready(function() {
 
         // Flash settings
         flash_swf_url : '/view/templates/plupload-2.1.1/js/Moxie.swf',
+        init: {
+            Error: function(up, err) {
+                alert(err.message);
+            },
+            // FilesAdded: function(up, file) {
+            //     // alert('FilesAdded');
+            // },
+            // UploadProgress: function(up, file) {
+            //     // console.log('UploadProgress');
+            //     // console.log(up.total);
+            //     $$("#log").html("<div>"+ file.percent +"%</div>");
+            // },
+            // FileUploaded: function(up, file, info) {
+            //     // alert(info.response);
+            //     console.log(info.response);
+            //     for (var i in info) {
+            //         console.log(i + ' : ' + info[i]);
+            //     }
+            //     var str = info.response;
+            //     str = str.replace('<pre style="word-wrap: break-word; white-space: pre-wrap;">', '');
+            //     str = str.replace('</pre>', '');
+            //     // alert(str);
+            //     var json = $$.parseJSON(str);
+            //     if (typeof(json['error']) != 'undefined'){
+            //         alert(json['error']);
+            //     }
+            //     // $$('#log').html(info.response);
+            //     // $$('#log').dialog('open');
+            // },
+            UploadComplete: function(up, file) {
+                alert('UploadComplete !!!');
+            },
+        },
 
-        clean_event: function(up) {
-            alert('确定要进行手工清理ISO挂载 ？');
-            clear_iso_mount();
+        iso_event: function(up) {
+            alert('确定要进行 ISO 恢复 ？');
+            recovery_iso();
         },
     });
 
@@ -242,9 +274,10 @@ $$(document).ready(function() {
 <div id="grid"></div>
 <br />
 
-<div id="uploader">
+<div id="upload_iso_file">
     <p>Your browser doesn't have Flash, Silverlight or HTML5 support.</p>
 </div>
+<!-- <div id="log"></div> -->
 
 
 </body>

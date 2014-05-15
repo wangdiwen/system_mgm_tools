@@ -558,7 +558,7 @@ $.widget("ui.plupload", {
 				// set a little delay to make sure that QueueChanged triggered by the core has time to complete
 				setTimeout(function() {
 					self.start();
-				}, 5);
+				}, 10);
 			}
 		});
 
@@ -647,9 +647,7 @@ $.widget("ui.plupload", {
 	},
 
 	_clean: function() {
-		// this.uploader.clean();
-		// alert('clean trigger');
-		this._trigger('clean_event', null, { up: this.uploader });
+		this._trigger('iso_event', null, { up: this.uploader });
 	},
 
 

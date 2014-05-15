@@ -14,6 +14,8 @@ urls = (
 
 class Upload:
     def GET(self):
+        # web.header('Content-type','text/html')
+        # web.header('Transfer-Encoding','chunked')
         render = web.template.frender("./view/templates/software_upload.html")
         return render()
     def POST(self):
@@ -38,6 +40,7 @@ class Rpmiso:
             data = web.data()
             data_array = data[0:128].split('\n');
             headers["Content-Type"] = "multipart/form-data; boundary=" + data_array[0][2:]
+            # headers["Transfer-Encoding"] = "chunked"
             res = RestfulClient.getresponse("POST", "/software/rpmiso", data, headers)
         except Exception as e:
             return "{\"error\":\"" + e.message + "\"}"

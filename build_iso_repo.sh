@@ -82,7 +82,7 @@ function build_iso_file() {
     }
 
     tips 'create Setup config file in iso ...'
-    local product=${g_iso_name%%.*}
+    local product=${g_iso_name%.*}
     echo "$product" > $g_rpm_repo_dir/Setup
 
     mkisofs -o $g_iso_name -N -no-iso-translate -J -R $g_rpm_repo_dir

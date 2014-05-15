@@ -81,6 +81,7 @@ print '\t################### Auto Building Product rpm pkg ###################\n
 
 def get_product_info(pro_name = ''):
     if not pro_name:
+        error('get_product_info: invalid product name, quit .')
         return False
 
     repo_list = [
@@ -92,17 +93,27 @@ def get_product_info(pro_name = ''):
     pkg_lines = []
 
     sta, out, err = shell_cmd('echo -e "N\n" | yum install ' + pro_name)
+    print out
     if out:
         lines = out.split("\n")
         is_ok = False
+        is_installed = False
 
         for line in lines:
+            if re.compile(".*already installed.*").match(line):
+                is_installed = True
+                break
+
             for repo in repo_list:
                 if re.compile(".*" + repo + ".*").match(line):
                     is_ok = True
             if is_ok:
                 pkg_lines.append(line.strip())
                 is_ok = False
+        if is_installed:
+            warning("software " + pro_name + ' has already installed')
+            warning('You can find a machine not installed ' + pro_name)
+            return False
     if len(pkg_lines) > 1:
         return pkg_lines
     return False
@@ -128,6 +139,8 @@ def get_rpm_name_list(pro_lines):
 
 def check_has_rpm(rpm_name):
     sta, out, err = shell_cmd('yum search ' + rpm_name)
+    print out
+    print err
     if sta == 0:
         # check has many software ?
         data = []
@@ -136,6 +149,8 @@ def check_has_rpm(rpm_name):
         for line in lines:
             if rule.match(line):
                 data.append(line)
+        print lines
+        print data
         if len(data) > 1:
             warning('check too many software, which do your choice ?')
             i = 0
@@ -143,6 +158,7 @@ def check_has_rpm(rpm_name):
                 i = i + 1
                 warning("%d : %s" % (i, item))
         else:
+            print 'find valid software !'
             return True
     return False
 
@@ -175,6 +191,7 @@ def download_rpm(rpm_list, path):
 
 product_name = ''                            # define your product rpm name
 product_name = get_input('Pls input your product software name')
+tips('Your product software is : ' + product_name)
 
 has_pro = check_has_rpm(product_name)
 if not has_pro:
@@ -231,3 +248,5 @@ if pro_lines:
     if os.path.isdir(down_path):
         sta = shell_cmd('rm -rf ' + down_path, True, 1)
     tips('=== over ===')
+else:
+    warning("check something warning ...")
