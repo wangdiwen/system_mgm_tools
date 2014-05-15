@@ -11,7 +11,7 @@ from common.restfulclient import RestfulError
 
 from common.global_helper import *  # public helper functions
 
-cgi.maxlen = 10 * 1024 * 1024 # 10MB
+cgi.maxlen = 50 * 1024 * 1024 # 10MB
 
 urls = (
     '', 'Rpmiso'
@@ -47,6 +47,7 @@ def mount_iso(iso_file, mount_point):
     cmd = 'mount -o loop ' + iso_file + ' ' + mount_point
     sta, out, err = invoke_shell(cmd)
     if sta != 0:
+        print out
         print err
         clean_all()
         raise RestfulError('580 Error: cannot mount iso file ' + iso_file + ' to ' + mount_point)

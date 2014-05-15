@@ -128,31 +128,6 @@ function detail_process(grid)
 }
 
 /////////////////////////////////////////////////////////////////////
-
-function recovery_iso() {
-    var retcode = false;
-    ask_cancel();
-    $$("#wait").html('<p style="text-align:center">进行 ISO 恢复中，请等待。。。</p>');
-    $$('#wait').dialog('open');
-
-    var ret = restful_ajax({url:"/model/software/rpmiso", type:"PUT", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
-    {
-        $$('#wait').dialog('close');
-        retcode = false;
-        alert(errorThrown);
-    }, success:function()
-    {
-        retcode = true;
-    }});
-
-    if (retcode) {
-        // alert('ISO 恢复，成功！');
-        clean_uploader();
-        $$("#wait").html('<p style="text-align:center">ISO 恢复，成功！</p>');
-        setTimeout(wait_close, 2000);
-    }
-}
-
 function ask_cancel() {
     $$('#ask').dialog("close");
 }
@@ -176,6 +151,34 @@ function clean_uploader() {
         }
     }
 }
+
+function recovery_iso() {
+    ask_cancel();
+    $$("#wait").html('<p style="text-align:center">进行 ISO 恢复中，请等待。。。</p>');
+    $$('#wait').dialog('open');
+
+    setTimeout(function() {
+        var retcode = false;
+        var ret = restful_ajax({url:"/model/software/rpmiso", type:"PUT", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            $$('#wait').dialog('close');
+            retcode = false;
+            alert(errorThrown);
+        }, success:function()
+        {
+            retcode = true;
+        }});
+
+        if (retcode) {
+            // alert('ISO 恢复，成功！');
+            clean_uploader();
+            $$("#wait").html('<p style="text-align:center">ISO 恢复，成功！</p>');
+            setTimeout(wait_close, 2000);
+        }
+    }, 2000);
+}
+
+
 /////////////////////////////////////////////////////////////////////
 
 
@@ -217,7 +220,7 @@ $$(document).ready(function() {
         max_file_size : '1000mb',
         multipart : true,
 
-        chunk_size: '10mb',
+        chunk_size: '30mb',
 
         // Resize images on clientside if we can
         resize : {
