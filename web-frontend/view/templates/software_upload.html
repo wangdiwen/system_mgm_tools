@@ -29,6 +29,10 @@
 -->
 </style>
 <script>
+
+var g_uploader = null;
+var g_files = null;
+
 function ajaxFileUpload()
 {
     $$("#loading").ajaxStart(function(){
@@ -127,8 +131,14 @@ function detail_process(grid)
 
 function recovery_iso() {
     var retcode = false;
+    ask_cancel();
+    $$("#wait").html('<p style="text-align:center">进行 ISO 恢复中，请等待。。。</p>');
+    $$('#wait').dialog('open');
+
     var ret = restful_ajax({url:"/model/software/rpmiso", type:"PUT", async:false, error:function(XMLHttpRequest, textStatus, errorThrown)
     {
+        $$('#wait').dialog('close');
+        retcode = false;
         alert(errorThrown);
     }, success:function()
     {
@@ -136,17 +146,44 @@ function recovery_iso() {
     }});
 
     if (retcode) {
-        alert('ISO 恢复，成功！');
+        // alert('ISO 恢复，成功！');
+        clean_uploader();
+        $$("#wait").html('<p style="text-align:center">ISO 恢复，成功！</p>');
+        setTimeout(wait_close, 2000);
     }
 }
 
+function ask_cancel() {
+    $$('#ask').dialog("close");
+}
+function ask_ok() {
+    $$('#ask').html('<p style="text-align:center">确定要使用 ISO 进行软件恢复吗 ？<br /><br />\
+          <input type="button" class="ask" id="ask_ok" value="确认" onclick="recovery_iso();"></input> \
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+          <input type="button" class="ask" id="ask_cancel" value="取消" onclick="ask_cancel();"></input> \
+          </p>');
+    $$('#ask').dialog('open');
+}
+function wait_close() {
+    $$('#wait').dialog('close');
+}
+function clean_uploader() {
+    if (g_uploader != null && g_files != null) {
+        for (var i in g_files) {
+            var id = g_files[i].id;
+            g_uploader.removeFile(g_files[i]);
+            $$('#'+id).hide();
+        }
+    }
+}
 /////////////////////////////////////////////////////////////////////
 
 
 $$(document).ready(function() {
 
     $$("#dialog" ).dialog({autoOpen: false, modal: true, width:800});
-    // $$("#log" ).dialog({autoOpen: true, modal: false, width:800});
+    $$("#ask" ).dialog({autoOpen: false, modal: false, width:500});
+    $$("#wait").dialog({autoOpen: false, modal: false, width:400});
 
     $$("#grid").vmxGrid({
         url : '/model/software/uninstall',
@@ -180,7 +217,7 @@ $$(document).ready(function() {
         max_file_size : '1000mb',
         multipart : true,
 
-        chunk_size: '100kb',
+        chunk_size: '1mb',
 
         // Resize images on clientside if we can
         resize : {
@@ -242,14 +279,22 @@ $$(document).ready(function() {
             //     // $$('#log').html(info.response);
             //     // $$('#log').dialog('open');
             // },
-            UploadComplete: function(up, file) {
-                alert('UploadComplete !!!');
+            UploadComplete: function(up, files) {
+                alert('完成上传 !!!');
+                // for (var item in files) {
+                //     console.log(files[item].name);
+                //     console.log(files[item].id);
+                //     var id = files[item].id;
+                //     up.removeFile(files[item]);
+                //     $$('#'+id).hide();
+                // }
+                g_uploader = up;
+                g_files = files;
             },
         },
 
         iso_event: function(up) {
-            alert('确定要进行 ISO 恢复 ？');
-            recovery_iso();
+            ask_ok();
         },
     });
 
@@ -278,7 +323,8 @@ $$(document).ready(function() {
     <p>Your browser doesn't have Flash, Silverlight or HTML5 support.</p>
 </div>
 <!-- <div id="log"></div> -->
-
+<div id="ask"></div>
+<div id="wait"></div>
 
 </body>
 </html>
