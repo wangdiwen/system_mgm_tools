@@ -171,7 +171,7 @@ def download_rpm(rpm_list, path):
     sta = shell_cmd('which yumdownloader', True, 1)
     if sta != 0:
         # install tools
-        sta = shell_cmd('yum -y install yumdownloader', True, 1)
+        sta = shell_cmd('yum -y install yum-utils', True, 1)
         if sta != 0:
             quit(1, 'install yumdownloader tool failed')
 
