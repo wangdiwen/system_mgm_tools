@@ -57,7 +57,7 @@ class model_proxy:
                 record_set = json.loads(res);
                 record_set = deal_array_data_for_client_ui(web.ctx.query[1:], record_set);
                 res = json.dumps(record_set)
-            
+
         except Exception as e:
             raise RestfulError(e.message)
         else:
@@ -113,7 +113,7 @@ class template:
         }
         args_lower = args.lower();
         data = ""
-        
+
         type = os.path.splitext(args_lower)[1];
         if type in file_type.keys():
             web.header('Content-type', file_type[type])
@@ -130,7 +130,7 @@ class template:
             f.close()
         web.header('Content-Length', len(data))
         return data
-        
+
 class favicon():
     def GET(self):
         file_path = "./view/templates/images/favicon.ico"
@@ -148,5 +148,3 @@ if __name__ == "__main__":
     os.environ["PORT"] = "8089"
     app.add_processor(auth_processor)
     app.run()
-
-
