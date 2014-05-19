@@ -5,7 +5,10 @@
 
 【开发】
     Author  ：王地文
-    By      ：3 部系统组
+
+【制作产品软件ISO镜像】
+    运行脚本： # ./get_product_rpm.py
+    根据给定的提示，输入产品顶级数模型的 RPM 软件包名称，即可自动从配置的RPM仓库中下载依赖的软件包，并在当前脚本目录中创建好ISO镜像。
 
 Welcome to search our project, and improve mgmtools together.
 
