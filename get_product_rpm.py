@@ -118,6 +118,13 @@ def get_product_info(pro_name = ''):
         return pkg_lines
     return False
 
+def get_rpm_ver(pro_name):
+    cmd = 'yum info ' + pro_name + ' | grep Version | awk \'{print $3}\''
+    out = shell_cmd(cmd, True, 2)
+    if out:
+        return out.strip()
+    return ''
+
 
 def get_clean_set(list_val):
     data = []
@@ -214,9 +221,15 @@ if pro_lines:
         error('Total packages cannot equal final packages')
         quit(1, 'quit ...')
 
+    # get the product version info
+    ver = get_rpm_ver(product_name)
+    if not ver:
+        error('Get ' + product_name + ' version info, failed')
+        quit(1, 'check something wrong ... quit ...')
+
     # download the rpm packages
     down_path = './repo'
-    iso_name = product_name + '.iso'
+    iso_name = product_name + '-' + ver + '.iso'
 
     count = download_rpm(rpm_list, down_path)
     tips("")

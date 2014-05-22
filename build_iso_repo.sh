@@ -91,6 +91,11 @@ function build_iso_file() {
         exit 1
     }
 
+    [ -d ./iso_repo ] && {
+        tips "Move the ISO files to local NFS-ISO repo ./iso_repo"
+        mv ./*.iso ./iso_repo
+    }
+
     tips "create iso file $g_iso_name success"
 }
 ###############################################################################
