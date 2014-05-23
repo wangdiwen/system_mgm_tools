@@ -30,10 +30,13 @@ error() { echo "${COLOR_RED}$*${COLOR_RESET}"; }
                     # Define Your Functions Here
 ###############################################################################
 
+g_version=2.0
+
 function usage() {
     cat << HELP
     Usge: ./build_iso_repo.sh -p <path to rpm repo dir> -n <iso name>
-          -h | --help for help
+          -h | --help    : help
+          -v | --version : check version of script
 HELP
     exit 0
 }
