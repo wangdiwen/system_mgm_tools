@@ -147,7 +147,7 @@ def mount(info):
     elif type == 'nfs':
         if not re.compile(".*:.*").match(device):
             return False
-        cmd = 'timeout 10 mount -v -t nfs -o intr,soft,timeo=20,retrans=2,retry=0,nolock ' + device + ' ' + mount_point
+        cmd = 'timeout 8 mount -v -t nfs -o intr,soft,timeo=30,retrans=2,retry=0,nolock ' + device + ' ' + mount_point
         print 'try nfs v4 ...'
         # print cmd
         status, stdout, stderr = invoke_shell(cmd)
@@ -157,7 +157,7 @@ def mount(info):
                 has_fstab = has_mount_record(mount_point)
                 if not has_fstab:
                     # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
-                    fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=20,retrans=2,retry=0,nolock 0 0'
+                    fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=30,retrans=2,retry=0,nolock 0 0'
                     # print fstab
                     record_mount_log(fstab)
 
@@ -176,45 +176,45 @@ def mount(info):
             # Note: The default NFS client version is NFSv4, but sometime it cannot mount success,
             #     Then we try use version 3 to mount, if not ok, we have nothing to it.
             #     The params '-o' is 'vers=4/3'
+            print 'try nfs v3 ...'
+            cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=30,retrans=2,retry=0,vers=3,nolock ' + device + ' ' + mount_point
             if stderr and re.compile(".*Input/output error.*").match(stderr.replace("\n", '')):
-                cmd = 'timeout 5 mount -v -t nfs -o intr,soft,timeo=20,retrans=2,retry=0,vers=3,nolock ' + device + ' ' + mount_point
-                print 'try nfs v3 ...'
-                # print cmd
-                status, stdout, stderr = invoke_shell(cmd)
-                # print status
-                # print stderr.replace("\n", ', ')
-                if status == 0:
-                    if startup == 'on':
-                        has_fstab = has_mount_record(mount_point)
-                        if not has_fstab:
-                            # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
-                            fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=20,retrans=2,retry=0,vers=3,nolock 0 0'
-                            # print fstab
-                            record_mount_log(fstab)
+                print 'Here, find the Input/output error, Maybe of version problem !!'
+            print cmd
+            status, stdout, stderr = invoke_shell(cmd)
+            print status
+            print stdout
+            print stderr.replace("\n", ', ')
+            if status == 0:
+                if startup == 'on':
+                    has_fstab = has_mount_record(mount_point)
+                    if not has_fstab:
+                        # fstab = device + ' ' + mount_point + ' nfs defaults 0 0'
+                        fstab = device + ' ' + mount_point + ' nfs intr,bg,soft,timeo=30,retrans=2,retry=0,vers=3,nolock 0 0'
+                        # print fstab
+                        record_mount_log(fstab)
 
-                    # add or config the new permission
-                    ret_permission = add_permission(type, mount_point, permission)
-                    if not ret_permission:
-                        msg = '580 config mount point permission failed'
-                        raise RestfulError(msg)
+                # add or config the new permission
+                ret_permission = add_permission(type, mount_point, permission)
+                if not ret_permission:
+                    msg = '580 config mount point permission failed'
+                    raise RestfulError(msg)
 
-                    # last, we check mount ok or not ?
-                    # print 'check mount_point ...'
-                    # print mount_point
-                    has_point = check_mount_point(mount_point)
-                    if not has_point:
-                        return False
-                    return True
-                else:
-                    raise RestfulError('580 Error Mount failed: ' + stderr.replace("\n", ', '))
+                # last, we check mount ok or not ?
+                # print 'check mount_point ...'
+                # print mount_point
+                has_point = check_mount_point(mount_point)
+                if not has_point:
+                    return False
+                return True
             else:
                 # del the tmp mount point
                 if already_has_mount_point:
                     shutil.rmtree(mount_point)
 
-                print 'try NFSv3 failed, not version problem !'
+                print 'try NFSv3 failed, Maybe not version problem !'
                 # report the error msg
-                raise RestfulError('580 Error: ' + stderr.replace("\n", ', '))
+                raise RestfulError('580 Error Mount failed: ' + stderr.replace("\n", ', '))
                 return False
     elif type == 'samba':
         if not re.compile("^\/\/").match(device):
