@@ -11,7 +11,7 @@ from common.restfulclient import RestfulError
 
 from common.global_helper import *  # public helper functions
 
-cgi.maxlen = 50 * 1024 * 1024 # 10MB
+cgi.maxlen = 50 * 1024 * 1024 # 50MB
 
 urls = (
     '', 'Rpmiso'

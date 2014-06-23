@@ -144,6 +144,9 @@ def init_vmx_rpm_list(global_meta):
         'net-snmp-vmx', 'openoffice-conf', 'python27', 'restful-server', 'rsyncd',
         'shellexecutor', 'sigar-vmx', 'swftools', 'usbkey', 'videotools', 'web-frontend',
         'mrs-oss-backend', 'mrs-4000-os', 'mrs-4000-as',
+        'tvwall-backend', 'tvwall-webcontent', 'tvwall-frontend', 'tvwall-mysql-conf',
+        'libX11', 'SDL', 'libX11-common', 'tvwall-config', 'libXrender',
+        'libpcap', 'nvidia-driver',
     ]
 
     if 'software' in global_meta.keys():
@@ -221,9 +224,9 @@ def init_meta_data():
     if ret:
         print 'init vmediax rpm pkg list OK'
 
-    ret = init_vmx_startup(meta)
-    if ret:
-        print 'init vmediax startup software OK'
+    # ret = init_vmx_startup(meta)
+    # if ret:
+        # print 'init vmediax startup software OK'
 
     print '=========================================================='
     return True

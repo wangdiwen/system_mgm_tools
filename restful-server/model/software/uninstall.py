@@ -13,8 +13,18 @@ urls = (
 )
 
 def get_installed():
-    meta = get_meta_data()
-    rpm_installed = meta['software']['installed']
+    # meta = get_meta_data()
+    # rpm_installed = meta['software']['installed']
+
+    # here, we get all the vmediax software, via VMediaX repo
+    rpm_installed = []
+    sta, out, err = invoke_shell('yum list installed | grep -E \"vmediax|installed|zeroc-ice-x86_64|zeroc-ice-i386\" | awk \'{print $1}\' | grep -v installed')
+    # result like: tvwall-webcontent.x86_64
+    # print out
+    if sta == 0 and out:
+        for item in out.split("\n"):
+            rpm_installed.append(item.strip())
+
     return rpm_installed
 
 class Uninstall:

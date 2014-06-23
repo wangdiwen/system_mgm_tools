@@ -75,9 +75,9 @@ class Softinfo:
 
 class SoftinfoExt:
     def GET(self, arg):
-        if not arg in get_installed():
-            msg = '580 has no such rpm package ' + arg
-            raise RestfulError(msg)
+        # if not arg in get_installed():
+            # msg = '580 has no such rpm package ' + arg
+            # raise RestfulError(msg)
         data = get_softinfo(arg)
         return json.dumps(data)
 
