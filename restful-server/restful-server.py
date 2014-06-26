@@ -3,8 +3,10 @@
 import os, json, re
 import web
 import threading
+import cgi
 
 web.config.debug = False
+cgi.maxlen = 0                  # here, no limit the post upload file
 
 from common import auth_list, invoke_shell
 from common.restfulclient import RestfulError
@@ -202,6 +204,7 @@ app.notfound = notfound
 
 if __name__ == "__main__":
     os.environ["PORT"] = "88"
+    cgi.maxlen = 0                  # here, no limit the post upload file
 
     # check sys version
     global_data = GlobalData()

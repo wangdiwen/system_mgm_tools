@@ -1,16 +1,19 @@
 #!/usr/bin/python2.7
 
-import web
+
 import re
 import os, shutil
 import cgi
+cgi.maxlen = 0                      # no limit
+
+import web
 
 from common import invoke_shell, rpm_query, rpm_install, rpm_update, get_rpminfo, get_sys_startup_mode, new_get_sys_startup_mode
 from common.restfulclient import RestfulError
 
 from common.global_helper import *  # public helper functions
 
-cgi.maxlen = 500 * 1024 * 1024 # 500MB
+
 
 urls = (
     '', 'Upload'
