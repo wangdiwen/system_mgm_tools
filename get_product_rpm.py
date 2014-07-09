@@ -19,8 +19,8 @@ def shell_cmd(cmd, wait = True, option = 0):
     process = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     if wait:
         process.wait()
+        stdout, stderr = process.communicate()
     status = process.returncode
-    stdout, stderr = process.communicate()
     if option in [0, False]:
         return (status, stdout.strip(), stderr.strip())
     elif option in [1, True]:

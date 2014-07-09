@@ -15,7 +15,7 @@ urls = (
   "/display", "Display",
   "/licensefile(.*)", "LicenseFile",
 )
-        
+
 class Log:
     def GET(self):
         render = web.template.frender("./view/templates/other_log.html")
@@ -23,7 +23,7 @@ class Log:
 class Backup:
     def GET(self):
         auth()
-            
+
         if web.ctx.query == "":
             render = web.template.frender("./view/templates/other_backup.html")
             return render()
@@ -43,7 +43,7 @@ class Backup:
                     path = "/opt/program/" + arg_map["path"]
                 else:
                     path = "/opt/system/" + arg_map["path"]
-            
+
             if arg_map["datatype"] == "list":
                 res, status = exec_sub("find " + path + " -type f -name '*'")
                 res = res.strip('\n');
@@ -73,12 +73,12 @@ class Backup:
                     res = f.read()
                     f.close()
                 os.remove(file_path)
-        
+
         except Exception as e:
             raise RestfulError("580 " + e.message)
         else:
             return res
-            
+
     def PUT(self):
         auth()
         '''
@@ -97,7 +97,7 @@ class Backup:
                     f = open('/opt/system/log/restful-server/restful.log', 'w')
                     f.truncate(0);
                     f.close()
-            
+
             if json_data["type"] == "usr":
                 if json_data["data"] == "log":
                     if json_data["action"] == "clearall":
@@ -119,8 +119,8 @@ class Backup:
                             f.truncate(0);
                             f.write(json_data["file_text"]);
                             f.close()
-                    
-        
+
+
         except Exception as e:
             raise RestfulError("580 " + e.message)
         else:
@@ -136,18 +136,20 @@ class License:
         try:
             if 'upload_file' in data:
                 file_name = os.path.split(data.upload_file.filename)[1]
+                tmp_name_list = file_name.split("\\")
+                file_name = tmp_name_list[-1]
                 if os.path.splitext(file_name)[1] != '.img':
                     raise Exception("the filename extension is not .img!!!");
-                    
+
                 dir_path = "/opt/system/license"
                 if not os.path.exists(dir_path):
                     os.mkdir(dir_path);
-                    
+
                 tmp_dir_path = "/opt/system/license/.tmp"
                 if os.path.exists(tmp_dir_path):
                     shutil.rmtree(tmp_dir_path)
                 os.mkdir(tmp_dir_path);
-                
+
                 file_path = tmp_dir_path + "/" + file_name
                 if os.path.exists(file_path):
                     os.remove(file_path)
@@ -155,23 +157,23 @@ class License:
                 file = open(file_path, 'w')
                 file.write(data.upload_file.file.read())
                 file.close()
-                
+
                 exec_sub("cd " + tmp_dir_path + "&&bzcat " + file_name + " | openssl bf-cbc -d -k 'mmap@vmediax' | cpio -iduv");
                 exec_sub("cd " + tmp_dir_path + "&&md5sum -c md5sum")
-                    
+
                 os.remove(file_path)
                 os.remove(tmp_dir_path + "/md5sum")
-                
+
                 list = os.listdir(tmp_dir_path)
                 for line in list:
                     if os.path.splitext(line)[1] == ".lic":
                         exec_sub("cd " + tmp_dir_path + "&&bzcat " + line + " | cpio -iduv");
                         os.remove(tmp_dir_path + "/" + line)
-                        
+
                 exec_sub("cd " + tmp_dir_path + "&&cp -ar ./* ../");
                 #shutil.copytree(tmp_dir_path, dir_path)
                 shutil.rmtree(tmp_dir_path)
-                
+
         except Exception as e:
             shutil.rmtree(tmp_dir_path)
             return "{\"error\":\"" + e.message + "\"}"
