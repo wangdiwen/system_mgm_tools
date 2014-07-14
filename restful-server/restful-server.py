@@ -138,9 +138,9 @@ class Auth_user():
         if not name or not passwd:
             raise RestfulError('570 cookies error')
 
-        rule = re.compile("^[\w-]+$")
-        if not rule.match(name) or not rule.match(passwd):
-            raise RestfulError('570 name or passwd just support [0-9a-zA-Z_-] characters')
+        # rule = re.compile("^[\w-]+$")
+        # if not rule.match(name) or not rule.match(passwd):
+        #     raise RestfulError('570 name or passwd just support [0-9a-zA-Z_-] characters')
 
         ret = auth_user(name, passwd)
         if ret:
@@ -178,12 +178,23 @@ def auth_processor(handler):
         passwd = web.cookies().get('user_passwd')
 
         if not name or not passwd:
-            raise RestfulError('570 cookies error')
+            raise RestfulError('570 cookies auth error')
+
+        # Note:
+        # 1. switch system model for develop or release, must auth 'admin' user,
+        #     'user' user has no permission.
+        # 2. shutdown or reboot the mechine, must auth the user, only 'admin' can do.
+        if path in ['/system/shutdown', '/system/reboot'] \
+            or (path == '/system/startup-mode' and method == 'PUT'):
+            # check user is 'admin'
+            if name != 'admin':
+                raise RestfulError("580 Auth Error: No permission, only admin can do this!")
+
 
         # filter chinese and other characters
-        rule = re.compile("^[\w-]+$")
-        if not rule.match(name) or not rule.match(passwd):
-            raise RestfulError('570 name or passwd just support [0-9a-zA-Z_-] characters')
+        # rule = re.compile("^[\w-]+$")
+        # if not rule.match(name) or not rule.match(passwd):
+        #     raise RestfulError('570 name or passwd just support [0-9a-zA-Z_-] characters')
 
         ret = auth_user(name, passwd)
         if ret:

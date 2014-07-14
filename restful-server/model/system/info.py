@@ -238,8 +238,8 @@ class SystemInfo:
         mgmt_version = get_mamttools_version()
         info['restful-server'] = mgmt_version['restful-server']
         info['web-frontend'] = mgmt_version['web-frontend']
-        info['sys_version'] = old_version['system_version']
-        info['build_time'] = old_version['build_time']
+        info['sys_version'] = old_version['system_version'] if 'system_version' in old_version.keys() else ''
+        info['build_time'] = old_version['build_time'] if 'build_time' in old_version.keys() else ''
 
         return json.dumps(info)
 

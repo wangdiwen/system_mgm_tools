@@ -216,13 +216,18 @@ def init_meta_data():
         ret = crawler_sys_meta()
         print 'Init global meta data OK !'
     else:
+        # Here, modify the dns
+        run_file = '/etc/resolv.conf'
+        ret = create_conf_by_list(run_file, meta['network']['nameserver'], 'nameserver', ' ')
+        ret = sync_run_config_file(run_file)
+
         print 'Warning: System already has meta, no need to init !'
 
     # init vmediax's rpm pkg list data
-    meta = get_meta_data()              # get the new meta again
-    ret = init_vmx_rpm_list(meta)
-    if ret:
-        print 'init vmediax rpm pkg list OK'
+    # meta = get_meta_data()              # get the new meta again
+    # ret = init_vmx_rpm_list(meta)
+    # if ret:
+    #     print 'init vmediax rpm pkg list OK'
 
     # ret = init_vmx_startup(meta)
     # if ret:

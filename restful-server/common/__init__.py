@@ -121,7 +121,7 @@ def update_conf_file(conf_file, key, value, separator= '='):
 def auth_list():
     auth_user_file = '/opt/system/conf/restful-server/auth_user'
     data = {}
-    rule = re.compile("(?P<key>[\w]+):(?P<value>[\w]+)")
+    rule = re.compile("(?P<key>[\w\!\@\#\$]+):(?P<value>[\w\!\@\#\$]+)")
     file = open(auth_user_file, 'r')
     lines = file.readlines()
     for line in lines:
