@@ -35,7 +35,7 @@ start() {
             #statements
             if [ -n $item ]; then
                 echo "stop other md device $item ..."
-                timeout 5 mdadm -S /dev/$item 2>&1 &
+                timeout 5 mdadm -S /dev/$item 2>&1      # here, block this copor
             fi
         done
 
